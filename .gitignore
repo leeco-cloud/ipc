@@ -1,0 +1,119 @@
+### 通用忽略规则 ###
+*.log
+*.tmp
+*.bak
+*.swp
+*.orig
+*.idea
+.DS_Store
+Thumbs.db
+/.settings/
+/.vscode/
+/nbproject/
+/bin/
+/tmp/
+/build/
+/out/
+/target/
+
+### Maven 忽略规则 ###
+# Maven 构建输出
+**/target/
+**/pom.xml.versionsBackup
+**/pom.xml.next
+**/release.properties
+**/dependency-reduced-pom.xml
+**/buildNumber.properties
+**/.flattened-pom.xml
+
+### IDE 文件 ###
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+**/.idea/
+**/*.iml
+
+# Eclipse
+.project
+.classpath
+.settings/
+.metadata/
+bin/
+tmp/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+### 操作系统文件 ###
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+### 日志文件 ###
+*.log
+logs/
+**/logs/
+*.log.*
+*.log.*
+
+### 测试报告和覆盖率报告 ###
+**/surefire-reports/
+**/failsafe-reports/
+**/site/
+**/jacoco.exec
+**/jacoco-it.exec
+**/coverage/
+**/test-output/
+
+### 环境配置和敏感文件 ###
+.env
+*.env
+*.secret
+*.key
+*.cert
+*.pem
+*.jks
+*.properties
+!src/main/resources/*.properties
+!src/test/resources/*.properties
+
+### 其他 ###
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# Spring Boot
+spring-boot-devtools.properties
+
+# Flyway
+**/flyway-*.sql
+
+# Liquibase
+**/liquibase.properties
+
+# 应用打包
+*.jar
+*.war
+*.ear
+*.zip
+*.tar
+*.tar.gz
+
+# 依赖管理
+**/dependency/
+
+# 本地开发配置
+local.config.*
+/local/
