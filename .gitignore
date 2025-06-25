@@ -87,8 +87,6 @@ logs/
 *.pem
 *.jks
 *.properties
-!src/main/resources/*.properties
-!src/test/resources/*.properties
 
 ### 其他 ###
 # Maven wrapper
