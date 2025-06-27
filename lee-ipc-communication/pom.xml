@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>com.lee.ipc</groupId>
-            <artifactId>lee-ipc-protocol</artifactId>
+            <artifactId>lee-ipc-serialization</artifactId>
             <version>${project.version}</version>
         </dependency>
         <!-- 序列化实现 -->

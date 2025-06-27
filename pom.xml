@@ -11,7 +11,6 @@
     <modules>
         <module>lee-ipc-common</module>
         <module>lee-ipc-serialization</module>
-        <module>lee-ipc-protocol</module>
         <module>lee-ipc-communication</module>
         <module>lee-ipc-register</module>
         <module>lee-ipc-monitor</module>
@@ -55,6 +54,11 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>1.7.36</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.fory</groupId>
+                <artifactId>fory-core</artifactId>
+                <version>0.11.0</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
