@@ -9,11 +9,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>lee-ipc-common</module>
-        <module>lee-ipc-serialization</module>
-        <module>lee-ipc-communication</module>
-        <module>lee-ipc-register</module>
-        <module>lee-ipc-monitor</module>
+        <module>lee-ipc-core</module>
         <module>lee-ipc-starter</module>
     </modules>
 
@@ -27,6 +23,12 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.lee.ipc</groupId>
+                <artifactId>lee-ipc-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
@@ -78,7 +80,9 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <release>${java.version}</release>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
             <plugin>

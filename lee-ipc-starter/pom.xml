@@ -14,18 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>com.lee.ipc</groupId>
-            <artifactId>lee-ipc-communication</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.lee.ipc</groupId>
-            <artifactId>lee-ipc-register</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.lee.ipc</groupId>
-            <artifactId>lee-ipc-monitor</artifactId>
-            <version>${project.version}</version>
+            <artifactId>lee-ipc-core</artifactId>
         </dependency>
 
         <dependency>
@@ -48,8 +37,9 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
                 <configuration>
-                    <mainClass>com.example.Application</mainClass>
+                    <mainClass>com.lee.ipc.starter.StarterApplication</mainClass>
                 </configuration>
                 <executions>
                     <execution>

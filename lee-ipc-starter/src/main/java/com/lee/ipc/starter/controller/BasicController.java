@@ -1,18 +1,23 @@
 package com.lee.ipc.starter.controller;
 
+import com.lee.ipc.starter.controller.custom.Customer;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.annotation.Resource;
 
 @Controller
 public class BasicController {
 
-    // http://127.0.0.1:8080/hello?name=lisi
+    @Resource
+    private Customer customer;
+
+    // http://127.0.0.1:8080/hello
     @RequestMapping("/hello")
     @ResponseBody
-    public String hello(@RequestParam(name = "name", defaultValue = "unknown user") String name) {
-        return "Hello " + name;
+    public void hello() {
+        customer.test();
     }
 
 }
