@@ -4,12 +4,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.lee.ipc</groupId>
-        <artifactId>lee-ipc</artifactId>
+        <groupId>com.dreams-summer</groupId>
+        <artifactId>ipc</artifactId>
         <version>${project.version}</version>
     </parent>
 
-    <artifactId>lee-ipc-core</artifactId>
+    <artifactId>ipc-core</artifactId>
 
     <dependencies>
         <dependency>
