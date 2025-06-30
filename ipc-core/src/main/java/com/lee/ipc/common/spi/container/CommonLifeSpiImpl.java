@@ -7,16 +7,6 @@ package com.lee.ipc.common.spi.container;
 public class CommonLifeSpiImpl implements ContainerLifeSpi {
 
     @Override
-    public int containerPort() {
-        return 8999;
-    }
-
-    @Override
-    public String containerName() {
-        return "testContainer";
-    }
-
-    @Override
     public void start() {
 
     }
@@ -28,6 +18,8 @@ public class CommonLifeSpiImpl implements ContainerLifeSpi {
 
     @Override
     public boolean isRunning() {
-        return false;
+        return true;
     }
+
+
 }

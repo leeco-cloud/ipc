@@ -14,6 +14,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.core.env.Environment;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
@@ -44,25 +45,39 @@ public class ReferenceAnnotationBeanPostProcessor implements InstantiationAwareB
                 Integer timeout = annotation.timeout();
                 SerializerType serializerType = annotation.serializerType();
 
-                String serviceUniqueKey = IpcServerNameGenerationsUtils.generalServiceUniqueKey(version, tags, field.getType(), serializerType);
+                Environment environment = applicationContext.getEnvironment();
 
-                ReferenceBean referenceBean = new ReferenceBean(version, tags, timeout, field.getType(), serializerType, serviceUniqueKey, null);
+                String serviceUniqueKey = IpcServerNameGenerationsUtils.generalServiceUniqueKey(version, tags, field.getType(), serializerType, environment);
+
+                ReferenceBean referenceBean = getReferenceBean(version, tags, timeout, field.getType(), serializerType, serviceUniqueKey);
 
                 Object proxy = getOrCreateProxy(referenceBean);
 
                 field.setAccessible(true);
                 field.set(bean, proxy);
 
-                applicationEventPublisher.publishEvent(new IpcConsumeReadyEvent(referenceBean));
+                applicationEventPublisher.publishEvent(new IpcConsumeReadyEvent(referenceBean, environment));
             }
         });
 
         return pvs;
     }
 
+    private ReferenceBean getReferenceBean(String version, String[] tags, Integer timeout, Class<?> serviceInterface, SerializerType serializerType, String serviceUniqueKey) {
+        if (ReferenceCache.referenceCacheMap.containsKey(serviceUniqueKey)) {
+            return ReferenceCache.referenceCacheMap.get(serviceUniqueKey);
+        }
+
+        ReferenceBean referenceBean = new ReferenceBean(version, tags, timeout, serviceInterface, serializerType, serviceUniqueKey, null);
+        // 加入缓存
+        ReferenceCache.referenceCacheMap.put(referenceBean.getServiceUniqueKey(), referenceBean);
+
+        return referenceBean;
+    }
+
     private Object getOrCreateProxy(ReferenceBean referenceBean) {
-        if (ReferenceCache.referenceCacheMap.containsKey(referenceBean.getServiceUniqueKey())) {
-            return ReferenceCache.referenceCacheMap.get(referenceBean.getServiceUniqueKey());
+        if (ReferenceCache.referenceProxyCacheMap.containsKey(referenceBean.getServiceUniqueKey())) {
+            return ReferenceCache.referenceProxyCacheMap.get(referenceBean.getServiceUniqueKey());
         }
 
         // 创建新代理
@@ -74,7 +89,7 @@ public class ReferenceAnnotationBeanPostProcessor implements InstantiationAwareB
         registerSingleton(referenceBean.getServiceUniqueKey(), proxy);
 
         // 加入缓存
-        ReferenceCache.referenceCacheMap.put(referenceBean.getServiceUniqueKey(), referenceBean);
+        ReferenceCache.referenceProxyCacheMap.put(referenceBean.getServiceUniqueKey(), proxy);
 
         return proxy;
     }

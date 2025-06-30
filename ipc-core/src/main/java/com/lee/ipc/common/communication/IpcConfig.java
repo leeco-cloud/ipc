@@ -1,5 +1,6 @@
 package com.lee.ipc.common.communication;
 
+import com.lee.ipc.common.AutoConfiguration;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
@@ -30,8 +31,8 @@ public abstract class IpcConfig {
     protected final boolean isWindows = System.getProperty("os.name").toLowerCase().contains("win");
     protected final boolean useUDS = !isWindows && (Epoll.isAvailable() || KQueue.isAvailable());
 
-    protected final int port = 8999;
-    protected final String udsPath = System.getProperty("java.io.tmpdir") + "/netty_server.sock";
+    protected final int port = 8998;
+    protected final String udsPath = System.getProperty("java.io.tmpdir") + "/" + "ipc_server.sock";
 
     protected final SocketAddress socketAddress = useUDS ? new DomainSocketAddress(udsPath) : new InetSocketAddress(port);
 

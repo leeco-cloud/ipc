@@ -4,7 +4,6 @@ import com.lee.ipc.common.protocol.IpcMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
-import io.netty.util.CharsetUtil;
 
 /**
  * netty消息编码器

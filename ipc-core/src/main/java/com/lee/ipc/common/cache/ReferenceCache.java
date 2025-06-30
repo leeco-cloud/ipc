@@ -9,4 +9,6 @@ public class ReferenceCache {
 
     public static Map<String, ReferenceBean> referenceCacheMap = new ConcurrentHashMap<>();
 
+    public static Map<String, Object> referenceProxyCacheMap = new ConcurrentHashMap<>();
+
 }

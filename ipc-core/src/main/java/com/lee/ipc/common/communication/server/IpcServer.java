@@ -3,6 +3,7 @@ package com.lee.ipc.common.communication.server;
 import com.lee.ipc.common.communication.IpcConfig;
 import com.lee.ipc.common.communication.decode.MessageDecoder;
 import com.lee.ipc.common.communication.encode.MessageEncoder;
+import com.lee.ipc.common.register.RegistryLocalCenter;
 import com.lee.ipc.common.util.FileUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -20,6 +21,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class IpcServer extends IpcConfig {
 
+    private String containerName;
+
     private final AtomicBoolean running = new AtomicBoolean(false);
 
     private static Channel serverChannel;
@@ -27,7 +30,8 @@ public class IpcServer extends IpcConfig {
     EventLoopGroup bossGroup = createEventLoopGroup(currentCpu, useUDS);
     EventLoopGroup workerGroup = createEventLoopGroup(currentCpu * 2, useUDS);
 
-    public void init() throws Exception {
+    public void init(String containerName) throws Exception {
+        this.containerName = containerName;
         start();
         Runtime.getRuntime().addShutdownHook(new Thread(this::stopServer));
     }
@@ -101,6 +105,8 @@ public class IpcServer extends IpcConfig {
         if (workerGroup != null) {
             workerGroup.shutdownGracefully();
         }
+
+        RegistryLocalCenter.removeService();
 
         System.out.println("Server stopped");
     }

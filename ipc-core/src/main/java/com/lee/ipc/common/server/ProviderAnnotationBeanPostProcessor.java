@@ -1,6 +1,8 @@
 package com.lee.ipc.common.server;
 
+import com.lee.ipc.common.AutoConfiguration;
 import com.lee.ipc.common.annotation.IpcProvider;
+import com.lee.ipc.common.cache.ServiceCache;
 import com.lee.ipc.common.communication.server.ServiceBean;
 import com.lee.ipc.common.exception.ErrorCode;
 import com.lee.ipc.common.exception.IpcBootException;
@@ -13,6 +15,8 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.context.EnvironmentAware;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 /**
@@ -20,7 +24,9 @@ import org.springframework.stereotype.Component;
  * @author yanhuai lee
  */
 @Component
-public class ProviderAnnotationBeanPostProcessor implements BeanPostProcessor, BeanDefinitionRegistryPostProcessor, ApplicationEventPublisherAware {
+public class ProviderAnnotationBeanPostProcessor implements BeanPostProcessor, BeanDefinitionRegistryPostProcessor, ApplicationEventPublisherAware, EnvironmentAware {
+
+    public static Environment environment;
 
     public static BeanDefinitionRegistry registry;
 
@@ -43,10 +49,17 @@ public class ProviderAnnotationBeanPostProcessor implements BeanPostProcessor, B
             }
             SerializerType serializerType = annotation.serializerType();
 
-            String serviceUniqueKey = IpcServerNameGenerationsUtils.generalServiceUniqueKey(version, tags, serviceInterface, serializerType);
-            ServiceBean serviceBean = new ServiceBean(version, tags, serviceInterface, serializerType, beanName, serviceUniqueKey);
+            String serviceUniqueKey = IpcServerNameGenerationsUtils.generalServiceUniqueKey(version, tags, serviceInterface, serializerType, environment);
 
-            applicationEventPublisher.publishEvent(new ServiceBeanExportEvent(serviceBean));
+            ServiceBean existServiceBean = ServiceCache.serviceCacheMap.get(serviceUniqueKey);
+            if (existServiceBean != null){
+                throw new IpcBootException(ErrorCode.BOOT_TOO_MUCH_SERVICE_INTERFACE);
+            }
+
+            String containerName = AutoConfiguration.getContainerName(environment);
+            ServiceBean serviceBean = new ServiceBean(version, tags, serviceInterface, serializerType, beanName, serviceUniqueKey, containerName);
+
+            applicationEventPublisher.publishEvent(new ServiceBeanExportEvent(serviceBean, environment));
         }
 
         return BeanPostProcessor.super.postProcessBeforeInitialization(bean, beanName);
@@ -80,5 +93,10 @@ public class ProviderAnnotationBeanPostProcessor implements BeanPostProcessor, B
     @Override
     public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
         ProviderAnnotationBeanPostProcessor.applicationEventPublisher = applicationEventPublisher;
+    }
+
+    @Override
+    public void setEnvironment(Environment environment) {
+        ProviderAnnotationBeanPostProcessor.environment = environment;
     }
 }

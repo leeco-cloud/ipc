@@ -20,7 +20,7 @@ public class IpcClient extends IpcConfig {
 
     private final AtomicBoolean running = new AtomicBoolean(false);
 
-    private Channel channel;
+    public Channel channel;
 
     EventLoopGroup group = createEventLoopGroup(currentCpu * 2, useUDS); // 0 = 默认CPU核数*2
 
@@ -29,7 +29,6 @@ public class IpcClient extends IpcConfig {
     public void init() throws Exception {
         start();
         Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
-        ipcClientInvoke = new IpcClientInvoke(channel);
     }
 
     public void start() throws Exception {
@@ -79,6 +78,8 @@ public class IpcClient extends IpcConfig {
 
         ChannelFuture connectFuture = bootstrap.connect(socketAddress);
 
+        channel = connectFuture.channel();
+
         connectFuture.addListener((ChannelFuture future) -> {
             if (!future.isSuccess()) {
                 Throwable cause = future.cause();
@@ -106,6 +107,7 @@ public class IpcClient extends IpcConfig {
             } else {
                 System.out.println("Successfully connected to server!");
                 channel = future.channel();
+                ipcClientInvoke = new IpcClientInvoke(channel);
             }
         });
     }

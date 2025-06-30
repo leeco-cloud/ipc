@@ -35,7 +35,7 @@ public class IpcMessage {
         return serializer.deserialize(content, IpcMessageRequest.class);
     }
 
-    public IpcMessageResponse deserialize(SerializerType serializerType) throws Exception {
+    public IpcMessageResponse deserializeResponse(SerializerType serializerType) throws Exception {
         Serializer serializer = SerializationFactory.getSerializer(serializerType);
         return serializer.deserialize(content, IpcMessageResponse.class);
     }

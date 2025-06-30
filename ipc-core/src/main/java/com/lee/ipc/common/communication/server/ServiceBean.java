@@ -45,5 +45,9 @@ public class ServiceBean {
      */
     private String serviceUniqueKey;
 
+    /**
+     * 容器名
+     */
+    private String containerName;
 
 }

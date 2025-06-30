@@ -2,6 +2,7 @@ package com.lee.ipc.common.client;
 
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
+import org.springframework.core.env.Environment;
 
 /**
  * 服务订阅事件
@@ -12,9 +13,12 @@ public class IpcConsumeReadyEvent extends ApplicationEvent {
 
     public ReferenceBean referenceBean;
 
-    public IpcConsumeReadyEvent(Object source) {
+    public Environment environment;
+
+    public IpcConsumeReadyEvent(Object source, Environment environment) {
         super(source);
         this.referenceBean = (ReferenceBean) source;
+        this.environment = environment;
     }
 
 }

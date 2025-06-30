@@ -1,8 +1,6 @@
 package com.lee.ipc.common.serialization.fury;
 
 import org.apache.fory.Fory;
-import org.apache.fory.ThreadLocalFory;
-import org.apache.fory.ThreadSafeFory;
 import org.apache.fory.config.CompatibleMode;
 import org.apache.fory.config.Language;
 
@@ -12,12 +10,12 @@ import org.apache.fory.config.Language;
  */
 public class FuryConfiguration {
 
-    public static ThreadSafeFory fory = new ThreadLocalFory(classLoader -> Fory.builder()
+    public static Fory fory = Fory.builder()
             .withLanguage(Language.JAVA)
+            .requireClassRegistration(false)
             .withRefTracking(true)
             .withAsyncCompilation(true)
             .withCompatibleMode(CompatibleMode.COMPATIBLE)
-            .withMetaShare(true)
-            .build());
+            .build();
 
 }

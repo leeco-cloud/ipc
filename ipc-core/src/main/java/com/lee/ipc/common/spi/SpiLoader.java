@@ -34,11 +34,11 @@ public class SpiLoader {
         }
     }
 
-    private static ContainerLifeSpi loadContainerLifeSpi() {
+    public static ContainerLifeSpi loadContainerLifeSpi() {
         return containerLifeSpi;
     }
 
-    private static List<IpcInvokeSpi> loadIpcInvokeSpi() {
+    public static List<IpcInvokeSpi> loadIpcInvokeSpi() {
         return ipcInvokeSpi;
     }
 

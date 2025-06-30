@@ -2,7 +2,9 @@ package com.lee.ipc.common.client;
 
 import com.lee.ipc.common.cache.ReferenceCache;
 import com.lee.ipc.common.communication.client.IpcClient;
+import com.lee.ipc.common.register.RegistryLocalCenter;
 import org.springframework.context.ApplicationListener;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -16,6 +18,8 @@ public class IpcConsumeReadyListener implements ApplicationListener<IpcConsumeRe
     public void onApplicationEvent(IpcConsumeReadyEvent event) {
         ReferenceBean referenceBean = event.getReferenceBean();
 
+        Environment environment = event.getEnvironment();
+
         ReferenceCache.referenceCacheMap.put(referenceBean.getServiceUniqueKey(), referenceBean);
 
         if (started.compareAndSet(false, true)) {
@@ -26,6 +30,9 @@ public class IpcConsumeReadyListener implements ApplicationListener<IpcConsumeRe
             try {
                 IpcClient ipcClient = new IpcClient();
                 ipcClient.init();
+                if (!RegistryLocalCenter.running.get()){
+                    new RegistryLocalCenter(environment);
+                }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

@@ -8,14 +8,9 @@ import org.springframework.context.Lifecycle;
  */
 public interface ContainerLifeSpi extends Lifecycle {
 
-    /**
-     * 容器端口
-     */
-    int containerPort();
-
-    /**
-     * 容器名
-     */
-    String containerName();
+    default void restart(){
+        stop();
+        start();
+    }
 
 }

@@ -56,7 +56,7 @@ public class IpcClientInvoke {
 
         IpcMessage response = responseFuture.get(5, TimeUnit.SECONDS);
 
-        return response.deserialize(serializerType);
+        return response.deserializeResponse(serializerType);
     }
 
 }
