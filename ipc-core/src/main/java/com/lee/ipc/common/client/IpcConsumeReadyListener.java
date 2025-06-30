@@ -23,10 +23,6 @@ public class IpcConsumeReadyListener implements ApplicationListener<IpcConsumeRe
         ReferenceCache.referenceCacheMap.put(referenceBean.getServiceUniqueKey(), referenceBean);
 
         if (started.compareAndSet(false, true)) {
-
-            // todo 启动定时任务定时从注册中心(共享目录)拉取服务列表
-
-            // 启动客户端 netty 链接服务端
             try {
                 IpcClient ipcClient = new IpcClient();
                 ipcClient.init();
@@ -36,8 +32,6 @@ public class IpcConsumeReadyListener implements ApplicationListener<IpcConsumeRe
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-
-            // todo 启动 FileListener 文件监听，实时监听注册中心服务状态变化
         }
     }
 
