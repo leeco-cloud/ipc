@@ -2,12 +2,14 @@ package com.lee.ipc.common.register;
 
 import com.alibaba.fastjson.JSON;
 import com.lee.ipc.common.AutoConfiguration;
+import com.lee.ipc.common.communication.client.IpcClient;
 import com.lee.ipc.common.communication.server.ServiceBean;
 import com.lee.ipc.common.exception.ErrorCode;
 import com.lee.ipc.common.log.RuntimeLogger;
 import com.lee.ipc.common.util.FileUtils;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.env.Environment;
 
 import java.io.IOException;
@@ -28,14 +30,19 @@ public class RegistryLocalCenter {
 
     public static AtomicBoolean running = new AtomicBoolean(false);
 
-    private static final ReentrantLock updateLock = new ReentrantLock();
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+    private static final ReentrantLock refreshLock = new ReentrantLock();
+    private static final ScheduledExecutorService refreshScheduler = Executors.newScheduledThreadPool(2);
+
+    private static final ReentrantLock reconnectLock = new ReentrantLock();
+    private static final ScheduledExecutorService reconnectScheduler = Executors.newScheduledThreadPool(2);
 
     private static FileAlterationMonitor monitor;
 
     public static String registerPath;
+    public static String registerContainerPath;
 
-    private static final Map<String, List<ServiceBean>> serviceMap = new ConcurrentHashMap<>();
+    public static final Map<String, List<ServiceBean>> containerServiceMap = new ConcurrentHashMap<>();
+    public static final Map<String, List<ServiceBean>> serviceUniqueKeyServiceMap = new ConcurrentHashMap<>();
 
     public static RegistryLocalCenter getInstance() {
         if (null == INSTANCE) {
@@ -49,61 +56,103 @@ public class RegistryLocalCenter {
     }
 
     public void init(Environment environment) throws Exception {
-        registerPath = AutoConfiguration.getLocalRegisterCenterPath(environment) + "/" + AutoConfiguration.getContainerName(environment);
+        registerPath = AutoConfiguration.getLocalRegisterCenterPath(environment);
+        registerContainerPath = AutoConfiguration.getLocalRegisterCenterPath(environment) + "/" + AutoConfiguration.getContainerName(environment);
 
-        FileUtils.deleteDirectoryRecursively(registerPath);
-        FileUtils.createDirectories(registerPath);
+        FileUtils.deleteDirectoryRecursively(registerContainerPath);
+        FileUtils.createDirectories(registerContainerPath);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(()->stopServer(registerPath)));
+        Runtime.getRuntime().addShutdownHook(new Thread(()->stopServer(registerContainerPath)));
+
+        fullScanDirectory();
+        reconnectAllServer();
 
         // 启动定时任务 定时刷新服务集合
-        scheduler.scheduleAtFixedRate(this::fullScanDirectory, 0, 10, TimeUnit.SECONDS);
+        refreshScheduler.scheduleAtFixedRate(this::fullScanDirectory, 10, 10, TimeUnit.SECONDS);
+        // 启动定时任务 定时检查连接是否正常
+        reconnectScheduler.scheduleAtFixedRate(this::reconnectAllServer, 10, 10, TimeUnit.SECONDS);
 
         // 启动文件监听
         startWatching();
     }
 
     public void fullScanDirectory() {
-        updateLock.lock();
+        refreshLock.lock();
         try{
             List<String> serviceFilePaths = FileUtils.listAllFilesRecursively(registerPath);
             if (serviceFilePaths != null) {
                 for (String serviceFilePath : serviceFilePaths) {
                     String serviceBeanStr = FileUtils.readFileToString(serviceFilePath, StandardCharsets.UTF_8);
-                    ServiceBean serviceBean = JSON.parseObject(serviceBeanStr, ServiceBean.class);
-                    List<ServiceBean> serviceBeans = serviceMap.getOrDefault(serviceBean.getContainerName(), new CopyOnWriteArrayList<>());
+                    ServiceBean serviceBean;
+                    try{
+                        serviceBean = JSON.parseObject(serviceBeanStr, ServiceBean.class);
+                    }catch (Exception e){
+                        continue;
+                    }
+                    if (serviceBean == null || StringUtils.isBlank(serviceBean.getContainerName())){
+                        continue;
+                    }
+                    List<ServiceBean> serviceBeans = containerServiceMap.getOrDefault(serviceBean.getContainerName(), new CopyOnWriteArrayList<>());
                     serviceBeans.add(serviceBean);
-                    serviceMap.put(serviceBean.getContainerName(), serviceBeans);
+                    containerServiceMap.put(serviceBean.getContainerName(), serviceBeans);
+
+                    List<ServiceBean> serviceUniqueKeyServiceBean = serviceUniqueKeyServiceMap.getOrDefault(serviceBean.getServiceUniqueKey(), new CopyOnWriteArrayList<>());
+                    serviceUniqueKeyServiceBean.add(serviceBean);
+                    serviceUniqueKeyServiceMap.put(serviceBean.getServiceUniqueKey(), serviceUniqueKeyServiceBean);
                 }
             }
         } catch (IOException e) {
             RuntimeLogger.error(ErrorCode.REGISTER_REFRESH_CENTER_ERROR);
         } finally {
-            updateLock.unlock();
+            refreshLock.unlock();
+        }
+    }
+
+    public void reconnectAllServer(){
+        reconnectLock.lock();
+        try{
+            for (String containerName : containerServiceMap.keySet()) {
+                IpcClient ipcClient = IpcClient.allClients.get(containerName);
+                if (ipcClient != null) {
+                    continue;
+                }
+                ipcClient = new IpcClient();
+                ipcClient.init(containerName);
+                IpcClient.allClients.put(containerName, ipcClient);
+            }
+        } catch (Exception e) {
+            RuntimeLogger.error(ErrorCode.REGISTER_REFRESH_CENTER_ERROR);
+        } finally {
+            reconnectLock.unlock();
         }
     }
 
     public void registerService(ServiceBean serviceBean) {
-        updateLock.lock();
+        refreshLock.lock();
         try{
-            String servicePath = registerPath + "/" + serviceBean.getServiceUniqueKey();
+            String servicePath = registerContainerPath + "/" + serviceBean.getServiceUniqueKey();
             FileUtils.writeStringToFile(servicePath, JSON.toJSONString(serviceBean), StandardCharsets.UTF_8, false);
-            List<ServiceBean> serviceBeans = serviceMap.getOrDefault(serviceBean.getContainerName(), new CopyOnWriteArrayList<>());
+            List<ServiceBean> serviceBeans = containerServiceMap.getOrDefault(serviceBean.getContainerName(), new CopyOnWriteArrayList<>());
             serviceBeans.add(serviceBean);
-            serviceMap.put(serviceBean.getContainerName(), serviceBeans);
+            containerServiceMap.put(serviceBean.getContainerName(), serviceBeans);
+
+            List<ServiceBean> serviceUniqueKeyServiceBean = serviceUniqueKeyServiceMap.getOrDefault(serviceBean.getServiceUniqueKey(), new CopyOnWriteArrayList<>());
+            serviceUniqueKeyServiceBean.add(serviceBean);
+            serviceUniqueKeyServiceMap.put(serviceBean.getServiceUniqueKey(), serviceUniqueKeyServiceBean);
         } catch (IOException e) {
             System.err.println("Error scanning directory: " + e.getMessage());
         } finally {
-            updateLock.unlock();
+            refreshLock.unlock();
         }
     }
 
     public static void removeService() {
-        stopServer(registerPath);
+        stopServer(registerContainerPath);
     }
 
     private static void stopServer(String registerPath) {
-        scheduler.shutdownNow();
+        refreshScheduler.shutdownNow();
+        reconnectScheduler.shutdownNow();
         try {
             FileUtils.deleteDirectoryRecursively(registerPath);
             monitor.stop();

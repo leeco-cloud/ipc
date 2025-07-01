@@ -10,10 +10,9 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.unix.DomainSocketAddress;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -27,12 +26,17 @@ public class IpcServer extends IpcConfig {
     private final AtomicBoolean running = new AtomicBoolean(false);
 
     private static Channel serverChannel;
-
-    EventLoopGroup bossGroup = createEventLoopGroup(currentCpu, useUDS);
-    EventLoopGroup workerGroup = createEventLoopGroup(currentCpu * 2, useUDS);
+    private final EventLoopGroup bossGroup = createEventLoopGroup(currentCpu, useUDS);
+    private final EventLoopGroup workerGroup = createEventLoopGroup(currentCpu * 2, useUDS);
+    private SocketAddress socketAddress;
 
     public void init(String containerName) throws Exception {
         this.containerName = containerName;
+        String udsPath = System.getProperty("java.io.tmpdir") + "/" + containerName + ".sock";
+        socketAddress = useUDS ? new DomainSocketAddress(udsPath) : new InetSocketAddress(port);
+        if (useUDS) {
+            FileUtils.createFile(udsPath);
+        }
         start();
         Runtime.getRuntime().addShutdownHook(new Thread(this::stopServer));
     }
@@ -68,23 +72,17 @@ public class IpcServer extends IpcConfig {
                 });
 
         ChannelFuture bindFuture;
-        if (useUDS) {
-            FileUtils.createFile(udsPath);
-            bindFuture = bootstrap.bind(new DomainSocketAddress(udsPath));
-            BootLogger.info("✅ Server started on UDS: " + udsPath);
-        } else {
-            bindFuture = bootstrap.bind(new InetSocketAddress(port));
-            BootLogger.info("✅ Server started on TCP port: " + port);
-        }
+
+        bindFuture = bootstrap.bind(socketAddress);
+        BootLogger.info("容器:" + containerName + ", ✅ Server started ");
 
         // 异步处理绑定结果
         bindFuture.addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {
                 serverChannel = future.channel();
-                BootLogger.info("Server started successfully");
+                BootLogger.info("容器:" + containerName + ", Server started successfully");
             } else {
-                System.err.println("Server start failed: " + future.cause());
-                future.cause().printStackTrace();
+                BootLogger.error("容器:" + containerName + ", Server start failed: " + future.cause());
                 stopServer();
             }
         });
@@ -92,7 +90,7 @@ public class IpcServer extends IpcConfig {
     }
 
     private void stopServer() {
-        BootLogger.info("Shutting down server...");
+        BootLogger.info("容器:" + containerName + ", Shutting down server...");
 
         if (serverChannel != null) {
             serverChannel.close();
@@ -108,7 +106,7 @@ public class IpcServer extends IpcConfig {
 
         RegistryLocalCenter.removeService();
 
-        BootLogger.info("Server stopped");
+        BootLogger.info("容器:" + containerName + ", Server stopped");
     }
 
 }

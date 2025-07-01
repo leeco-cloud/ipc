@@ -7,8 +7,12 @@ import com.lee.ipc.common.log.BootLogger;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
+import io.netty.channel.unix.DomainSocketAddress;
 
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,18 +25,27 @@ public class IpcClient extends IpcConfig {
 
     private final AtomicBoolean running = new AtomicBoolean(false);
 
+    public String containerName;
+
     public Channel channel;
+    private SocketAddress socketAddress;
+    private final EventLoopGroup group = createEventLoopGroup(currentCpu * 2, useUDS); // 0 = 默认CPU核数*2
 
-    EventLoopGroup group = createEventLoopGroup(currentCpu * 2, useUDS); // 0 = 默认CPU核数*2
+    public IpcClientInvoke ipcClientInvoke;
 
-    public static IpcClientInvoke ipcClientInvoke;
+    public static Map<String, IpcClient> allClients = new ConcurrentHashMap<>();
 
-    public void init() {
-        start();
+    public void init(String containerName) {
+        this.containerName = containerName;
+
+        String udsPath = System.getProperty("java.io.tmpdir") + "/" + containerName + ".sock";
+        socketAddress = useUDS ? new DomainSocketAddress(udsPath) : new InetSocketAddress(port);
+
+        start(containerName);
         Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
     }
 
-    public void start() {
+    public void start(String containerName) {
         if (!running.compareAndSet(false, true)) {
             return;
         }
@@ -59,7 +72,7 @@ public class IpcClient extends IpcConfig {
                             pipeline.addLast(new MessageDecoder());
 
                             // 业务处理器
-                            pipeline.addLast(new ClientHandler());
+                            pipeline.addLast(new ClientHandler(containerName));
                         }
                     });
 

@@ -87,7 +87,6 @@ public class IpcClientInvoke {
             throw new IpcRuntimeException(exception);
         }finally {
             ThreadLocalContent.clear();
-            MonitorSupport.clear(requestId);
         }
     }
 
@@ -115,15 +114,6 @@ public class IpcClientInvoke {
         } catch (ExecutionException | InterruptedException e) {
             // 请求异常
             throw new IpcRuntimeException(ErrorCode.REQUEST_ERROR, ipcMessageRequest.getInterfaceClass().getName(), ipcMessageRequest.getMethodName());
-        }
-    }
-
-    private void doMonitor(Long requestId, Map<String, Long> monitorData) {
-        // todo 上报完整链路监控数据 monitor
-        try{
-
-        }catch (Exception exception){
-            // ignore
         }
     }
 

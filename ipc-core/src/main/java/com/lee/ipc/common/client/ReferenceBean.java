@@ -1,16 +1,22 @@
 package com.lee.ipc.common.client;
 
 import com.lee.ipc.common.communication.client.IpcClient;
+import com.lee.ipc.common.communication.server.ServiceBean;
 import com.lee.ipc.common.constant.MessageType;
+import com.lee.ipc.common.exception.ErrorCode;
+import com.lee.ipc.common.exception.IpcRuntimeException;
 import com.lee.ipc.common.protocol.IpcMessageResponse;
+import com.lee.ipc.common.register.RegistryLocalCenter;
 import com.lee.ipc.common.serialization.common.SerializerType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.List;
 
 @Getter
 @Setter
@@ -55,7 +61,18 @@ public class ReferenceBean implements InvocationHandler{
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
-        IpcMessageResponse ipcMessageResponse = IpcClient.ipcClientInvoke.sendRequest(serviceUniqueKey, serviceInterface, serializerType, MessageType.NORMAL, method.getName(), args, timeout);
+
+        List<ServiceBean> serviceBeans = RegistryLocalCenter.serviceUniqueKeyServiceMap.get(getServiceUniqueKey());
+        if (CollectionUtils.isEmpty(serviceBeans)) {
+            throw new IpcRuntimeException(ErrorCode.CLIENT_UN_READY, serviceInterface);
+        }
+        ServiceBean serviceBean = serviceBeans.get(0);
+        IpcClient ipcClient = IpcClient.allClients.get(serviceBean.getContainerName());
+        if (ipcClient == null) {
+            throw new IpcRuntimeException(ErrorCode.CLIENT_UN_READY, serviceInterface);
+        }
+
+        IpcMessageResponse ipcMessageResponse = ipcClient.ipcClientInvoke.sendRequest(serviceUniqueKey, serviceInterface, serializerType, MessageType.NORMAL, method.getName(), args, timeout);
         return ipcMessageResponse.getData();
     }
 

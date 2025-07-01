@@ -7,6 +7,8 @@ import org.slf4j.helpers.MessageFormatter;
 public enum ErrorCode {
 
     // 通用错误 1000-1999
+    NETTY_CLIENT_ERROR(1001, "netty断开连接... 开始重试"),
+    CLIENT_UN_READY(1002, "未找到可用对象 : {}"),
 
     // 启动错误 2000-2999
     BOOT_CUSTOM_ERROR(2001, "服务端启动失败"),

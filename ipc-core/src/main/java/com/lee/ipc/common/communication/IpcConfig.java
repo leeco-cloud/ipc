@@ -1,6 +1,5 @@
 package com.lee.ipc.common.communication;
 
-import com.lee.ipc.common.AutoConfiguration;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
@@ -15,10 +14,6 @@ import io.netty.channel.kqueue.KQueueServerDomainSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.channel.unix.DomainSocketAddress;
-
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 
 /**
  * ipc netty 统一配置
@@ -32,9 +27,6 @@ public abstract class IpcConfig {
     protected final boolean useUDS = !isWindows && (Epoll.isAvailable() || KQueue.isAvailable());
 
     protected final int port = 8998;
-    protected final String udsPath = System.getProperty("java.io.tmpdir") + "/" + "ipc_server.sock";
-
-    protected final SocketAddress socketAddress = useUDS ? new DomainSocketAddress(udsPath) : new InetSocketAddress(port);
 
     protected static EventLoopGroup createEventLoopGroup(int threads, boolean useUDS) {
         if (useUDS && Epoll.isAvailable()) {
