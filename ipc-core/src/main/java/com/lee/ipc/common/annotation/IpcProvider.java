@@ -18,22 +18,28 @@ import java.lang.annotation.Target;
 public @interface IpcProvider {
 
     /**
-     * version（非必填）:版本号
+     * version（非必填）
+     * 版本号
+     * 默认 1.0.0
      */
     String version() default "1.0.0";
 
     /**
-     * tag（非必填）: 自定义标签，可以是字符串，可以是环境变量
+     * tag（非必填）
+     * 自定义标签，可以是字符串：XXX，可以是环境变量：${XXX}
      */
     String[] tags() default {};
 
     /**
-     * serviceInterface（非必填）:服务接口，当父层超过2个，需要指定serviceInterface
+     * serviceInterface（非必填）
+     * 服务接口，当父层超过2个，需要指定serviceInterface
      */
     Class<?> serviceInterface() default Object.class;
 
     /**
-     * serializerType（非必填）: 序列化类型，默认FURY
+     * serializerType（非必填）
+     * 序列化类型
+     * 默认FURY
      */
     SerializerType serializerType() default SerializerType.FURY;
 
