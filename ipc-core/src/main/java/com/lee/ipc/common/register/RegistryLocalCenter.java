@@ -101,8 +101,8 @@ public class RegistryLocalCenter {
                     serviceUniqueKeyServiceMap.put(serviceBean.getServiceUniqueKey(), serviceUniqueKeyServiceBean);
                 }
             }
-        } catch (IOException e) {
-            RuntimeLogger.error(ErrorCode.REGISTER_REFRESH_CENTER_ERROR);
+        } catch (Exception e) {
+            RuntimeLogger.error(ErrorCode.REGISTER_REFRESH_CENTER_ERROR.getMessage(), e);
         } finally {
             refreshLock.unlock();
         }
@@ -121,7 +121,7 @@ public class RegistryLocalCenter {
                 IpcClient.allClients.put(containerName, ipcClient);
             }
         } catch (Exception e) {
-            RuntimeLogger.error(ErrorCode.REGISTER_REFRESH_CENTER_ERROR);
+            RuntimeLogger.error(ErrorCode.REGISTER_REFRESH_CENTER_ERROR.getMessage(), e);
         } finally {
             reconnectLock.unlock();
         }
