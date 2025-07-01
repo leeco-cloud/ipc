@@ -55,7 +55,6 @@ public class ServerHandler extends SimpleChannelInboundHandler<IpcMessage> {
         respMsg.setRequestDeserializeTime(msg.getRequestDeserializeTime());
 
         try{
-
             // 处理请求并生成响应
             IpcMessageRequest request;
             try{

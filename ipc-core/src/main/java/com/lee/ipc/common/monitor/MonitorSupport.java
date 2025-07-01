@@ -21,7 +21,7 @@ public class MonitorSupport {
             1, IpcConfig.currentCpu, 60L, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(1000), new ThreadPoolExecutor.CallerRunsPolicy());
 
-    private static final Map<Long, Map<String, Long>> allMonitorTime = new ConcurrentHashMap<>();
+    private static final MonitorMeta<Long, Map<String, Long>> allMonitorTime = new MonitorMeta<>(10000);
 
     public static void start(Long requestId, MonitorType monitorType){
         Map<String, Long> monitorTime = allMonitorTime.getOrDefault(requestId, new ConcurrentHashMap<>());
@@ -75,13 +75,6 @@ public class MonitorSupport {
             }
         }catch (Exception e){
             // ignore
-        }
-    }
-
-    public static void clear(Long requestId){
-        Map<String, Long> monitorTime = allMonitorTime.get(requestId);
-        if (monitorTime != null){
-            allMonitorTime.remove(requestId);
         }
     }
 
