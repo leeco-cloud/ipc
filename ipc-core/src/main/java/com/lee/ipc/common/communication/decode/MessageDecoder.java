@@ -54,11 +54,4 @@ public class MessageDecoder extends ByteToMessageDecoder {
         out.add(message);
     }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        System.err.println("Business handler error: " + cause.getMessage());
-        cause.printStackTrace();
-        ctx.close();
-    }
-
 }

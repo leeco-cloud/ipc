@@ -3,6 +3,7 @@ package com.lee.ipc.common.communication.client;
 import com.lee.ipc.common.communication.IpcConfig;
 import com.lee.ipc.common.communication.decode.MessageDecoder;
 import com.lee.ipc.common.communication.encode.MessageEncoder;
+import com.lee.ipc.common.log.BootLogger;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
@@ -26,12 +27,12 @@ public class IpcClient extends IpcConfig {
 
     public static IpcClientInvoke ipcClientInvoke;
 
-    public void init() throws Exception {
+    public void init() {
         start();
         Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
     }
 
-    public void start() throws Exception {
+    public void start() {
         if (!running.compareAndSet(false, true)) {
             return;
         }
@@ -41,13 +42,13 @@ public class IpcClient extends IpcConfig {
             bootstrap.group(group)
                     .channel(selectClientChannelClass(useUDS))
 
-                    // 3. 核心优化参数配置
+                    // 核心优化参数配置
                     .option(ChannelOption.TCP_NODELAY, true)
                     .option(ChannelOption.SO_KEEPALIVE, true)
                     .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                     .option(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator())
 
-                    // 4. 处理器链
+                    // 处理器链
                     .handler(new ChannelInitializer<>() {
                         @Override
                         protected void initChannel(Channel ch) {
@@ -62,49 +63,40 @@ public class IpcClient extends IpcConfig {
                         }
                     });
 
-            // 5. 连接服务器（UDS或TCP）
+            // 连接服务器（UDS或TCP）
             connectServer(bootstrap, socketAddress);
 
-            System.out.println("✅ Connection established");
+            BootLogger.info("✅ Connection established");
         } catch (Exception e) {
-            e.printStackTrace();
+            // 状态是重置为false
+            running.set(false);
+            BootLogger.error(e.getMessage(), e);
         }
-
     }
 
     private void connectServer(Bootstrap bootstrap, SocketAddress socketAddress) {
         AtomicInteger retryCount = new AtomicInteger(0);
 
         ChannelFuture connectFuture = bootstrap.connect(socketAddress);
-
         channel = connectFuture.channel();
-
         connectFuture.addListener((ChannelFuture future) -> {
             if (!future.isSuccess()) {
-                Throwable cause = future.cause();
+                int currentRetry = retryCount.incrementAndGet();
+                int BASE_DELAY_SECONDS = 1;
 
-                // 检查是否为UDS文件不存在的异常
-                if (cause instanceof java.io.FileNotFoundException) {
+                // 指数退避策略：2^currentRetry * base_delay
+                long delay = (long) Math.pow(2, currentRetry) * BASE_DELAY_SECONDS;
+                BootLogger.error(future.cause().getMessage(), future.cause());
+                BootLogger.info("服务未就绪. 重试 (%d) in %ds...%n", currentRetry, delay);
 
-                    int currentRetry = retryCount.incrementAndGet();
-                    int BASE_DELAY_SECONDS = 1;
-
-                    // 指数退避策略：2^currentRetry * base_delay
-                    long delay = (long) Math.pow(2, currentRetry) * BASE_DELAY_SECONDS;
-                    System.out.printf("Server not ready. Retrying (%d) in %ds...%n",
-                            currentRetry, delay);
-
-                    // 调度重试
-                    future.channel().eventLoop().schedule(
-                            () -> connectServer(bootstrap, socketAddress),
-                            delay,
-                            TimeUnit.SECONDS
-                    );
-                } else {
-                    cause.printStackTrace();
-                }
+                // 调度重试
+                future.channel().eventLoop().schedule(
+                        () -> connectServer(bootstrap, socketAddress),
+                        delay,
+                        TimeUnit.SECONDS
+                );
             } else {
-                System.out.println("Successfully connected to server!");
+                BootLogger.info("Successfully connected to server!");
                 channel = future.channel();
                 ipcClientInvoke = new IpcClientInvoke(channel);
             }

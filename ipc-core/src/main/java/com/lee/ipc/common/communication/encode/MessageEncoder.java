@@ -13,8 +13,6 @@ public class MessageEncoder extends MessageToByteEncoder<IpcMessage> {
 
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, IpcMessage msg, ByteBuf out) throws Exception {
-        System.out.println("🔒 Encoding message: " + msg);
-
         out.writeInt(0); // 预留长度位置
         out.writeLong(msg.getRequestId());
         out.writeInt(msg.getSerializerType());
@@ -42,15 +40,6 @@ public class MessageEncoder extends MessageToByteEncoder<IpcMessage> {
         // 4. 更新消息长度（不包括长度字段自身）
         int length = out.readableBytes() - 4;
         out.setInt(0, length);
-
-        System.out.println("✅ Encoded message size: " + length + " bytes");
-    }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        System.err.println("Business handler error: " + cause.getMessage());
-        cause.printStackTrace();
-        ctx.close();
     }
 
 }

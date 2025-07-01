@@ -3,6 +3,7 @@ package com.lee.ipc.common.communication.server;
 import com.lee.ipc.common.communication.IpcConfig;
 import com.lee.ipc.common.communication.decode.MessageDecoder;
 import com.lee.ipc.common.communication.encode.MessageEncoder;
+import com.lee.ipc.common.log.BootLogger;
 import com.lee.ipc.common.register.RegistryLocalCenter;
 import com.lee.ipc.common.util.FileUtils;
 import io.netty.bootstrap.ServerBootstrap;
@@ -70,17 +71,17 @@ public class IpcServer extends IpcConfig {
         if (useUDS) {
             FileUtils.createFile(udsPath);
             bindFuture = bootstrap.bind(new DomainSocketAddress(udsPath));
-            System.out.println("✅ Server started on UDS: " + udsPath);
+            BootLogger.info("✅ Server started on UDS: " + udsPath);
         } else {
             bindFuture = bootstrap.bind(new InetSocketAddress(port));
-            System.out.println("✅ Server started on TCP port: " + port);
+            BootLogger.info("✅ Server started on TCP port: " + port);
         }
 
         // 异步处理绑定结果
         bindFuture.addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {
                 serverChannel = future.channel();
-                System.out.println("Server started successfully");
+                BootLogger.info("Server started successfully");
             } else {
                 System.err.println("Server start failed: " + future.cause());
                 future.cause().printStackTrace();
@@ -91,7 +92,7 @@ public class IpcServer extends IpcConfig {
     }
 
     private void stopServer() {
-        System.out.println("Shutting down server...");
+        BootLogger.info("Shutting down server...");
 
         if (serverChannel != null) {
             serverChannel.close();
@@ -107,7 +108,7 @@ public class IpcServer extends IpcConfig {
 
         RegistryLocalCenter.removeService();
 
-        System.out.println("Server stopped");
+        BootLogger.info("Server stopped");
     }
 
 }

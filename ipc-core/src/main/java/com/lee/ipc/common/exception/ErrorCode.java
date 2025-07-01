@@ -9,8 +9,9 @@ public enum ErrorCode {
     // 通用错误 1000-1999
 
     // 启动错误 2000-2999
-    BOOT_TOO_MUCH_SERVICE_INTERFACE(2001, "服务提供者存在多个接口定义,请声明具体接口: {}"),
-    BOOT_TOO_MUCH_SERVICE_PROVIDER(2002, "服务提供者存在多个相同定义的实现,请检查: {}"),
+    BOOT_CUSTOM_ERROR(2001, "服务端启动失败"),
+    BOOT_TOO_MUCH_SERVICE_INTERFACE(2002, "服务提供者存在多个接口定义,请声明具体接口: {}"),
+    BOOT_TOO_MUCH_SERVICE_PROVIDER(2003, "服务提供者存在多个相同定义的实现,请检查: {}"),
 
     // 客户端错误 3000-3999
     REQUEST_SERIALIZER_ERROR(3001, "客户端序列化失败: {} - {}"),

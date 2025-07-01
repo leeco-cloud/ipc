@@ -2,6 +2,8 @@ package com.lee.ipc.common.client;
 
 import com.lee.ipc.common.cache.ReferenceCache;
 import com.lee.ipc.common.communication.client.IpcClient;
+import com.lee.ipc.common.exception.ErrorCode;
+import com.lee.ipc.common.exception.IpcBootException;
 import com.lee.ipc.common.register.RegistryLocalCenter;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.Environment;
@@ -30,7 +32,7 @@ public class IpcConsumeReadyListener implements ApplicationListener<IpcConsumeRe
                     RegistryLocalCenter.getInstance().init(environment);
                 }
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new IpcBootException(e, ErrorCode.BOOT_CUSTOM_ERROR);
             }
         }
     }
