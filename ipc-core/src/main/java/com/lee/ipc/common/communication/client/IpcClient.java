@@ -52,25 +52,24 @@ public class IpcClient extends IpcConfig {
 
         try {
             Bootstrap bootstrap = new Bootstrap();
-            bootstrap.group(group)
-                    .channel(selectClientChannelClass(useUDS))
+            bootstrap = bootstrap.group(group).channel(selectClientChannelClass(useUDS));
 
-                    // 核心优化参数配置
-//                    .option(ChannelOption.TCP_NODELAY, true)
-//                    .option(ChannelOption.SO_KEEPALIVE, true)
-                    .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                    .option(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator())
+            if (!useUDS){
+                bootstrap.option(ChannelOption.TCP_NODELAY, true);
+                bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
+            }
 
-                    // 处理器链
-                    .handler(new ChannelInitializer<>() {
+            bootstrap.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
+            bootstrap.option(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator());
+
+            // 处理器链
+            bootstrap.handler(new ChannelInitializer<>() {
                         @Override
                         protected void initChannel(Channel ch) {
                             ChannelPipeline pipeline = ch.pipeline();
-
                             // 编解码器
                             pipeline.addLast(new MessageEncoder());
                             pipeline.addLast(new MessageDecoder());
-
                             // 业务处理器
                             pipeline.addLast(new ClientHandler(containerName));
                         }

@@ -44,23 +44,27 @@ public class IpcServer extends IpcConfig {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> stopServer(udsPath)));
     }
 
-    public void start(String udsPath) throws Exception {
+    public void start(String udsPath) {
         if (!running.compareAndSet(false, true)) {
             return;
         }
 
         ServerBootstrap bootstrap = new ServerBootstrap();
-        bootstrap.group(bossGroup, workerGroup)
-                .channel(selectServerChannelClass(useUDS))
+        bootstrap.group(bossGroup, workerGroup);
+        bootstrap.channel(selectServerChannelClass(useUDS));
 
-                .option(ChannelOption.SO_BACKLOG, 1024)
-                .option(ChannelOption.SO_REUSEADDR, true)
-//                .childOption(ChannelOption.TCP_NODELAY, true) // 禁用Nagle算法
-//                .childOption(ChannelOption.SO_KEEPALIVE, true)
-                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT) // 内存池
-                .childOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator())
+        bootstrap.option(ChannelOption.SO_BACKLOG, 1024);
+        bootstrap.option(ChannelOption.SO_REUSEADDR, true);
 
-                .childHandler(new ChannelInitializer<>() {
+        if (!useUDS){
+            bootstrap.childOption(ChannelOption.TCP_NODELAY, true); // 禁用Nagle算法
+            bootstrap.childOption(ChannelOption.SO_KEEPALIVE, true);
+        }
+
+        bootstrap.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT) ;// 内存池
+        bootstrap.childOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator());
+
+        bootstrap.childHandler(new ChannelInitializer<>() {
                     @Override
                     protected void initChannel(Channel ch) {
                         ChannelPipeline pipeline = ch.pipeline();
