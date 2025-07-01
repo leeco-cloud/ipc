@@ -52,13 +52,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<IpcMessage> {
         IpcMessage respMsg = new IpcMessage(msg.getRequestId(), msg.getSerializerType(), msg.getMessageType());
         respMsg.setIpcRequestTime(msg.getIpcRequestTime());
         respMsg.setIpcResponseTime(msg.getIpcResponseTime());
-        respMsg.setRequestDeserializeTime(msg.getRequestDeserializeTime());
 
         try{
             // 处理请求并生成响应
             IpcMessageRequest request;
             try{
                 request = msg.deserializeRequest(serializerType);
+                respMsg.setRequestDeserializeTime(msg.getRequestDeserializeTime());
             }catch (Exception e){
                 // 请求反序列化错误
                 RuntimeLogger.error(ErrorCode.REQUEST_DESERIALIZE_ERROR);

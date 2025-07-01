@@ -56,8 +56,8 @@ public class IpcClient extends IpcConfig {
                     .channel(selectClientChannelClass(useUDS))
 
                     // 核心优化参数配置
-                    .option(ChannelOption.TCP_NODELAY, true)
-                    .option(ChannelOption.SO_KEEPALIVE, true)
+//                    .option(ChannelOption.TCP_NODELAY, true)
+//                    .option(ChannelOption.SO_KEEPALIVE, true)
                     .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                     .option(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator())
 

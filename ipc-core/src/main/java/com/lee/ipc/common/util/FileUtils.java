@@ -196,6 +196,22 @@ public class FileUtils {
     }
 
     /**
+     * 获取目录下的json文件列表 包括递归子目录
+     * @param dirPath 目录路径
+     * @return 文件路径列表
+     */
+    public static List<String> listAllFilesJson(String dirPath) throws IOException {
+        Path start = Paths.get(dirPath);
+        try (Stream<Path> stream = Files.walk(start)) {
+            return stream
+                    .filter(Files::isRegularFile)
+                    .map(Path::toString)
+                    .filter(string -> string.toLowerCase().endsWith(".json"))
+                    .collect(Collectors.toList());
+        }
+    }
+
+    /**
      * 获取文件大小 (字节)
      * @param filePath 文件路径
      * @return 文件大小

@@ -35,13 +35,16 @@ public class IpcServer extends IpcConfig {
         String udsPath = System.getProperty("java.io.tmpdir") + "/" + containerName + ".sock";
         socketAddress = useUDS ? new DomainSocketAddress(udsPath) : new InetSocketAddress(port);
         if (useUDS) {
+            if (FileUtils.exists(udsPath)) {
+                FileUtils.deleteFile(udsPath);
+            }
             FileUtils.createFile(udsPath);
         }
-        start();
-        Runtime.getRuntime().addShutdownHook(new Thread(this::stopServer));
+        start(udsPath);
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> stopServer(udsPath)));
     }
 
-    public void start() throws Exception {
+    public void start(String udsPath) throws Exception {
         if (!running.compareAndSet(false, true)) {
             return;
         }
@@ -52,8 +55,8 @@ public class IpcServer extends IpcConfig {
 
                 .option(ChannelOption.SO_BACKLOG, 1024)
                 .option(ChannelOption.SO_REUSEADDR, true)
-                .childOption(ChannelOption.TCP_NODELAY, true) // 禁用Nagle算法
-                .childOption(ChannelOption.SO_KEEPALIVE, true)
+//                .childOption(ChannelOption.TCP_NODELAY, true) // 禁用Nagle算法
+//                .childOption(ChannelOption.SO_KEEPALIVE, true)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT) // 内存池
                 .childOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator())
 
@@ -83,28 +86,29 @@ public class IpcServer extends IpcConfig {
                 BootLogger.info("容器:" + containerName + ", Server started successfully");
             } else {
                 BootLogger.error("容器:" + containerName + ", Server start failed: " + future.cause());
-                stopServer();
+                stopServer(udsPath);
             }
         });
 
     }
 
-    private void stopServer() {
+    private void stopServer(String udsPath) {
         BootLogger.info("容器:" + containerName + ", Shutting down server...");
 
         if (serverChannel != null) {
             serverChannel.close();
         }
 
-        if (bossGroup != null) {
-            bossGroup.shutdownGracefully();
-        }
-
-        if (workerGroup != null) {
-            workerGroup.shutdownGracefully();
-        }
+        bossGroup.shutdownGracefully();
+        workerGroup.shutdownGracefully();
 
         RegistryLocalCenter.removeService();
+
+        try{
+            FileUtils.deleteFile(udsPath);
+        }catch (Exception e){
+            // ignore
+        }
 
         BootLogger.info("容器:" + containerName + ", Server stopped");
     }

@@ -13,37 +13,49 @@ public class FileMonitor extends FileAlterationListenerAdaptor {
     @Override
     public void onFileDelete(File file) {
         super.onFileDelete(file);
-        RegistryLocalCenter.getInstance().fullScanDirectory();
+        if (RegistryLocalCenter.running.get()){
+            RegistryLocalCenter.getInstance().fullScanDirectory();
+        }
     }
 
     @Override
     public void onFileChange(File file) {
         super.onFileChange(file);
-        RegistryLocalCenter.getInstance().fullScanDirectory();
+        if (RegistryLocalCenter.running.get()){
+            RegistryLocalCenter.getInstance().fullScanDirectory();
+        }
     }
 
     @Override
     public void onFileCreate(File file) {
         super.onFileCreate(file);
-        RegistryLocalCenter.getInstance().fullScanDirectory();
+        if (RegistryLocalCenter.running.get()){
+            RegistryLocalCenter.getInstance().fullScanDirectory();
+        }
     }
 
     @Override
     public void onDirectoryDelete(File directory) {
         super.onDirectoryDelete(directory);
-        RegistryLocalCenter.getInstance().fullScanDirectory();
+        if (RegistryLocalCenter.running.get()){
+            RegistryLocalCenter.getInstance().fullScanDirectory();
+        }
     }
 
     @Override
     public void onDirectoryChange(File directory) {
         super.onDirectoryChange(directory);
-        RegistryLocalCenter.getInstance().fullScanDirectory();
+        if (RegistryLocalCenter.running.get()){
+            RegistryLocalCenter.getInstance().fullScanDirectory();
+        }
     }
 
     @Override
     public void onDirectoryCreate(File directory) {
         super.onDirectoryCreate(directory);
-        RegistryLocalCenter.getInstance().fullScanDirectory();
+        if (RegistryLocalCenter.running.get()){
+            RegistryLocalCenter.getInstance().fullScanDirectory();
+        }
     }
 
 }

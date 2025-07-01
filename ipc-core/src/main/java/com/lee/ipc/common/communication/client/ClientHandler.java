@@ -33,7 +33,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<IpcMessage> {
     public void channelInactive(ChannelHandlerContext ctx) {
         RuntimeLogger.error(ErrorCode.NETTY_CLIENT_ERROR);
         IpcClient.allClients.remove(containerName);
-        RegistryLocalCenter.getInstance().reconnectAllServer();
+        RegistryLocalCenter.getInstance().fullScanDirectory();
     }
 
     @Override
@@ -41,7 +41,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<IpcMessage> {
         RuntimeLogger.error(ErrorCode.NETTY_CLIENT_ERROR.getMessage(), cause);
         ctx.close();
         IpcClient.allClients.remove(containerName);
-        RegistryLocalCenter.getInstance().reconnectAllServer();
+        RegistryLocalCenter.getInstance().fullScanDirectory();
     }
 
 }

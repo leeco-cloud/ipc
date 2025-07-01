@@ -74,12 +74,14 @@ public class RegistryLocalCenter {
 
         // 启动文件监听
         startWatching();
+
+        running.set(true);
     }
 
     public void fullScanDirectory() {
         refreshLock.lock();
         try{
-            List<String> serviceFilePaths = FileUtils.listAllFilesRecursively(registerPath);
+            List<String> serviceFilePaths = FileUtils.listAllFilesJson(registerPath);
             if (serviceFilePaths != null) {
                 for (String serviceFilePath : serviceFilePaths) {
                     String serviceBeanStr = FileUtils.readFileToString(serviceFilePath, StandardCharsets.UTF_8);
@@ -100,6 +102,7 @@ public class RegistryLocalCenter {
                     serviceUniqueKeyServiceBean.add(serviceBean);
                     serviceUniqueKeyServiceMap.put(serviceBean.getServiceUniqueKey(), serviceUniqueKeyServiceBean);
                 }
+                reconnectAllServer();
             }
         } catch (Exception e) {
             RuntimeLogger.error(ErrorCode.REGISTER_REFRESH_CENTER_ERROR.getMessage(), e);
@@ -108,7 +111,7 @@ public class RegistryLocalCenter {
         }
     }
 
-    public void reconnectAllServer(){
+    private void reconnectAllServer(){
         reconnectLock.lock();
         try{
             for (String containerName : containerServiceMap.keySet()) {
@@ -130,7 +133,7 @@ public class RegistryLocalCenter {
     public void registerService(ServiceBean serviceBean) {
         refreshLock.lock();
         try{
-            String servicePath = registerContainerPath + "/" + serviceBean.getServiceUniqueKey();
+            String servicePath = registerContainerPath + "/" + serviceBean.getServiceUniqueKey() + ".json";
             FileUtils.writeStringToFile(servicePath, JSON.toJSONString(serviceBean), StandardCharsets.UTF_8, false);
             List<ServiceBean> serviceBeans = containerServiceMap.getOrDefault(serviceBean.getContainerName(), new CopyOnWriteArrayList<>());
             serviceBeans.add(serviceBean);
@@ -143,6 +146,7 @@ public class RegistryLocalCenter {
             System.err.println("Error scanning directory: " + e.getMessage());
         } finally {
             refreshLock.unlock();
+            fullScanDirectory();
         }
     }
 
