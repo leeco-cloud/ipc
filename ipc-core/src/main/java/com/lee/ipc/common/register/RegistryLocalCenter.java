@@ -24,7 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class RegistryLocalCenter {
 
-    public static RegistryLocalCenter INSTANCE = new RegistryLocalCenter();
+    private static volatile RegistryLocalCenter INSTANCE = new RegistryLocalCenter();
 
     public static AtomicBoolean running = new AtomicBoolean(false);
 
@@ -36,6 +36,17 @@ public class RegistryLocalCenter {
     public static String registerPath;
 
     private static final Map<String, List<ServiceBean>> serviceMap = new ConcurrentHashMap<>();
+
+    public static RegistryLocalCenter getInstance() {
+        if (null == INSTANCE) {
+            synchronized (RegistryLocalCenter.class) {
+                if (null == INSTANCE) {
+                    INSTANCE = new RegistryLocalCenter();
+                }
+            }
+        }
+        return INSTANCE;
+    }
 
     public void init(Environment environment) throws Exception {
         registerPath = AutoConfiguration.getLocalRegisterCenterPath(environment) + "/" + AutoConfiguration.getContainerName(environment);

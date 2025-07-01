@@ -25,7 +25,7 @@ public class IpcServicePublicListener implements ApplicationListener<ServiceBean
                 IpcServer ipcServer = new IpcServer();
                 ipcServer.init(serviceBean.getContainerName());
                 if (!RegistryLocalCenter.running.get()){
-                    RegistryLocalCenter.INSTANCE.init(environment);
+                    RegistryLocalCenter.getInstance().init(environment);
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -33,7 +33,7 @@ public class IpcServicePublicListener implements ApplicationListener<ServiceBean
         }
 
         // 注册服务到注册中心
-        RegistryLocalCenter.INSTANCE.registerService(serviceBean);
+        RegistryLocalCenter.getInstance().registerService(serviceBean);
     }
 
 }
