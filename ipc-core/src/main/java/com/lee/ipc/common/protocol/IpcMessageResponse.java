@@ -19,4 +19,7 @@ public class IpcMessageResponse implements Serializable {
 
     private Object data;
 
+    private Integer errorCode;
+    private String errorMsg;
+
 }

@@ -2,6 +2,7 @@ package com.lee.ipc.common.communication.client;
 
 import com.lee.ipc.common.communication.support.ThreadLocalContent;
 import com.lee.ipc.common.constant.MessageType;
+import com.lee.ipc.common.exception.ErrorCode;
 import com.lee.ipc.common.exception.IpcRuntimeException;
 import com.lee.ipc.common.monitor.MonitorSupport;
 import com.lee.ipc.common.protocol.IpcMessage;
@@ -57,12 +58,16 @@ public class IpcClientInvoke {
             }
 
             // 序列化请求数据
-            ipcMessage.serializeRequest(serializerType, ipcMessageRequest);
+            try{
+                ipcMessage.serializeRequest(serializerType, ipcMessageRequest);
+            }catch (Exception e){
+                throw new IpcRuntimeException(ErrorCode.REQUEST_SERIALIZER_ERROR, serviceInterface.getName(), methodName);
+            }
 
             ResponseFuture responseFuture = new ResponseFuture(ipcMessage.getRequestId());
 
             // 发送IPC请求
-            IpcMessageResponse ipcMessageResponse = doSendIpc(ipcMessage, serializerType, responseFuture, timeout);
+            IpcMessageResponse ipcMessageResponse = doSendIpc(ipcMessage, ipcMessageRequest, serializerType, responseFuture, timeout);
 
             Object data = ipcMessageResponse.getData();
 
@@ -76,6 +81,8 @@ public class IpcClientInvoke {
             MonitorSupport.recordMetrics(requestId);
 
             return ipcMessageResponse;
+        }catch (IpcRuntimeException ipcRuntimeException){
+            throw ipcRuntimeException;
         }catch (Exception exception){
             throw new IpcRuntimeException(exception);
         }finally {
@@ -84,21 +91,31 @@ public class IpcClientInvoke {
         }
     }
 
-    private IpcMessageResponse doSendIpc(IpcMessage ipcMessage, SerializerType serializerType, ResponseFuture responseFuture, Integer timeout) throws Exception {
+    private IpcMessageResponse doSendIpc(IpcMessage ipcMessage, IpcMessageRequest ipcMessageRequest, SerializerType serializerType, ResponseFuture responseFuture, Integer timeout) {
 
         channel.eventLoop().execute(()-> channel.writeAndFlush(ipcMessage));
 
         try{
             IpcMessage response = responseFuture.get(timeout, TimeUnit.MILLISECONDS);
             MonitorSupport.addRecord(response.getRequestId(), response);
-            return response.deserializeResponse(serializerType);
+            try{
+                IpcMessageResponse ipcMessageResponse = response.deserializeResponse(serializerType);
+                if (ipcMessageResponse != null && ipcMessageResponse.getErrorCode() != null){
+                    // 服务端错误
+                    throw new IpcRuntimeException(ipcMessageResponse.getErrorCode(), ipcMessageResponse.getErrorMsg());
+                }
+                return ipcMessageResponse;
+            }catch (Exception e){
+                // 响应反序列化失败
+                throw new IpcRuntimeException(ErrorCode.REQUEST_SERIALIZER_ERROR, ipcMessageRequest.getInterfaceClass().getName(), ipcMessageRequest.getMethodName());
+            }
         }catch (TimeoutException timeoutException){
             // 请求超时
-//            return response.deserializeErrorResponse(serializerType);
+            throw new IpcRuntimeException(ErrorCode.REQUEST_TIME_OUT_ERROR, ipcMessageRequest.getInterfaceClass().getName(), ipcMessageRequest.getMethodName());
         } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+            // 请求异常
+            throw new IpcRuntimeException(ErrorCode.REQUEST_ERROR, ipcMessageRequest.getInterfaceClass().getName(), ipcMessageRequest.getMethodName());
         }
-        return null;
     }
 
     private void doMonitor(Long requestId, Map<String, Long> monitorData) {

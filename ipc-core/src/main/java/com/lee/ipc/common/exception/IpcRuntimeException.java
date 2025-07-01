@@ -13,6 +13,13 @@ public class IpcRuntimeException extends RuntimeException {
     private final Integer errorCode;
     private final String errorMsg;
 
+    public IpcRuntimeException(Integer errorCode, String message) {
+        super(message);
+        this.errorCode = errorCode;
+        this.errorMsg = message;
+        RuntimeLogger.error("[" + errorCode + "]" + errorMsg);
+    }
+
     public IpcRuntimeException(Throwable throwable) {
         super(throwable);
         this.errorCode = null;

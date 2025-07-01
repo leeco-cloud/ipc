@@ -1,5 +1,6 @@
 package com.lee.ipc.common.protocol;
 
+import com.lee.ipc.common.exception.ErrorCode;
 import com.lee.ipc.common.monitor.MonitorSupport;
 import com.lee.ipc.common.monitor.MonitorType;
 import com.lee.ipc.common.serialization.SerializationFactory;
@@ -61,6 +62,13 @@ public class IpcMessage {
     public IpcMessageResponse deserializeResponse(SerializerType serializerType) throws Exception {
         Serializer serializer = SerializationFactory.getSerializer(serializerType);
         MonitorSupport.start(requestId, MonitorType.RESPONSE_DESERIALIZE_SPEND_TIME);
+        if (content == null || content.length == 0) {
+            // 服务端位置异常
+            IpcMessageResponse ipcMessageResponse = new IpcMessageResponse();
+            ipcMessageResponse.setErrorCode(ErrorCode.SERVICE_INVOKE_ERROR.getCode());
+            ipcMessageResponse.setErrorMsg(ErrorCode.SERVICE_INVOKE_ERROR.getMessage());
+            return ipcMessageResponse;
+        }
         IpcMessageResponse deserialize = serializer.deserialize(content, IpcMessageResponse.class);
         MonitorSupport.stop(requestId, MonitorType.RESPONSE_DESERIALIZE_SPEND_TIME);
         return deserialize;

@@ -16,7 +16,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -48,15 +47,27 @@ public class ServerHandler extends SimpleChannelInboundHandler<IpcMessage> {
      * 执行服务链路
      */
     private IpcMessage invokeService(IpcMessage msg) {
+        SerializerType serializerType = SerializerType.getSerializerType(msg.getSerializerType());
+
+        IpcMessage respMsg = new IpcMessage(msg.getRequestId(), msg.getSerializerType(), msg.getMessageType());
+        respMsg.setIpcRequestTime(msg.getIpcRequestTime());
+        respMsg.setIpcResponseTime(msg.getIpcResponseTime());
+        respMsg.setRequestDeserializeTime(msg.getRequestDeserializeTime());
+
         try{
-            SerializerType serializerType = SerializerType.getSerializerType(msg.getSerializerType());
 
             // 处理请求并生成响应
-            IpcMessageRequest request = null;
+            IpcMessageRequest request;
             try{
                 request = msg.deserializeRequest(serializerType);
             }catch (Exception e){
+                // 请求反序列化错误
                 RuntimeLogger.error(ErrorCode.REQUEST_DESERIALIZE_ERROR);
+                IpcMessageResponse ipcMessageResponse = new IpcMessageResponse();
+                ipcMessageResponse.setErrorCode(ErrorCode.REQUEST_DESERIALIZE_ERROR.getCode());
+                ipcMessageResponse.setErrorMsg(e.getMessage());
+                respMsg.serializeResponse(serializerType, ipcMessageResponse);
+                return respMsg;
             }
 
             // 拦截器链SPI 前置处理器
@@ -82,25 +93,40 @@ public class ServerHandler extends SimpleChannelInboundHandler<IpcMessage> {
                 response = invokeSpi.afterInvoke(request.getInterfaceClass(), request.getMethodName(), response);
             }
 
-            IpcMessage respMsg = new IpcMessage(msg.getRequestId(), msg.getSerializerType(), msg.getMessageType());
-            respMsg.setIpcRequestTime(msg.getIpcRequestTime());
-            respMsg.setIpcResponseTime(msg.getIpcResponseTime());
-            respMsg.setRequestDeserializeTime(msg.getRequestDeserializeTime());
-
             respMsg.setBizTime(bizSpendTime);
 
-            IpcMessageResponse ipcMessageResponse = new IpcMessageResponse(response);
+            IpcMessageResponse ipcMessageResponse = new IpcMessageResponse();
+            ipcMessageResponse.setData(response);
 
-            respMsg.serializeResponse(serializerType, ipcMessageResponse);
+            try{
+                respMsg.serializeResponse(serializerType, ipcMessageResponse);
+            }catch (Exception e){
+                RuntimeLogger.error(ErrorCode.RESPONSE_SERIALIZER_ERROR);
+                ipcMessageResponse = new IpcMessageResponse();
+                ipcMessageResponse.setErrorCode(ErrorCode.RESPONSE_SERIALIZER_ERROR.getCode());
+                ipcMessageResponse.setErrorMsg(e.getMessage());
+
+                respMsg.serializeResponse(serializerType, ipcMessageResponse);
+                return respMsg;
+            }
 
             return respMsg;
         } catch (Exception e) {
+            RuntimeLogger.error(ErrorCode.SERVICE_INVOKE_ERROR);
+            IpcMessageResponse ipcMessageResponse = new IpcMessageResponse();
+            ipcMessageResponse.setErrorCode(ErrorCode.SERVICE_INVOKE_ERROR.getCode());
+            ipcMessageResponse.setErrorMsg(e.getMessage());
 
+            try{
+                respMsg.serializeResponse(serializerType, ipcMessageResponse);
+                return respMsg;
+            }catch (Exception exception){
+                return respMsg;
+            }
 
         } finally {
             ThreadLocalContent.clear();
         }
-        return null;
     }
 
     /**

@@ -13,11 +13,15 @@ public enum ErrorCode {
     BOOT_TOO_MUCH_SERVICE_PROVIDER(2002, "服务提供者存在多个相同定义的实现,请检查: {}"),
 
     // 客户端错误 3000-3999
-    REQUEST_SERIALIZER_ERROR(3001, "客户端序列化失败"),
+    REQUEST_SERIALIZER_ERROR(3001, "客户端序列化失败: {} - {}"),
     REQUEST_TIME_OUT_ERROR(3002, "客户端请求超时: {} - {}"),
+    REQUEST_ERROR(3003, "客户端请求异常: {} - {}"),
+    RESPONSE_DESERIALIZE_ERROR(3004, "服务端反序列化失败: {} - {}"),
 
     // 服务端错误 4000-4999
     REQUEST_DESERIALIZE_ERROR(4001, "客户端反序列化失败"),
+    RESPONSE_SERIALIZER_ERROR(4002, "客户端反序列化失败"),
+    SERVICE_INVOKE_ERROR(4003, "服务端执行异常"),
 
     // 注册中心错误 5000-5999
     REGISTER_REFRESH_CENTER_ERROR(5001, "刷新注册中心异常");
