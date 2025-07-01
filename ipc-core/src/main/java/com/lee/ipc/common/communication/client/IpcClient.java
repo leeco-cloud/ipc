@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * uds通讯协议
+ * netty客户端
  * @author yanhuai lee
  */
 public class IpcClient extends IpcConfig {

@@ -16,7 +16,7 @@ import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * uds服务端
+ * netty服务端
  * @author yanhuai lee
  */
 public class IpcServer extends IpcConfig {
