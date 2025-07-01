@@ -113,3 +113,12 @@ public interface IpcMonitorSpi {
 
 }
 ```
+
+
+
+## 3. todo
+
+### 3.1 模块隔离：sofa-ark
+
+### 3.2 IPC服务降级成RPC
+
