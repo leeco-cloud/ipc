@@ -7,12 +7,12 @@ package com.lee.ipc.common.spi.invoke;
 public class CommonIpcInvokeSpi implements IpcInvokeSpi{
 
     @Override
-    public Object[] beforeInvoke(Object... request) {
-        return request;
+    public Object[] beforeInvoke(Class<?> serviceInterface, String methodName, Object... args) {
+        return args;
     }
 
     @Override
-    public Object afterInvoke(Object response) {
+    public Object afterInvoke(Class<?> serviceInterface, String methodName, Object response) {
         return response;
     }
 }

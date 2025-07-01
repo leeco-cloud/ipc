@@ -43,7 +43,7 @@ public class ProviderAnnotationBeanPostProcessor implements BeanPostProcessor, B
             if (serviceInterface == Object.class) {
                 Class<?>[] interfaces = bean.getClass().getInterfaces();
                 if (interfaces.length > 1) {
-                    throw new IpcBootException(ErrorCode.BOOT_TOO_MUCH_SERVICE_INTERFACE);
+                    throw new IpcBootException(ErrorCode.BOOT_TOO_MUCH_SERVICE_INTERFACE, beanName);
                 }
                 serviceInterface = interfaces[0];
             }
@@ -53,11 +53,14 @@ public class ProviderAnnotationBeanPostProcessor implements BeanPostProcessor, B
 
             ServiceBean existServiceBean = ServiceCache.serviceCacheMap.get(serviceUniqueKey);
             if (existServiceBean != null){
-                throw new IpcBootException(ErrorCode.BOOT_TOO_MUCH_SERVICE_INTERFACE);
+                throw new IpcBootException(ErrorCode.BOOT_TOO_MUCH_SERVICE_PROVIDER, serviceInterface.getName());
             }
 
             String containerName = AutoConfiguration.getContainerName(environment);
             ServiceBean serviceBean = new ServiceBean(version, tags, serviceInterface, serializerType, beanName, serviceUniqueKey, containerName);
+
+            ServiceCache.serviceCacheMap.put(serviceUniqueKey, serviceBean);
+            ServiceCache.serviceBeanCacheMap.put(serviceUniqueKey, bean);
 
             applicationEventPublisher.publishEvent(new ServiceBeanExportEvent(serviceBean, environment));
         }

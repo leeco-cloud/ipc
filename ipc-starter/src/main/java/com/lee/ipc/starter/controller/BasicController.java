@@ -17,7 +17,7 @@ public class BasicController {
     @RequestMapping("/hello")
     @ResponseBody
     public void hello() {
-        customer.test();
+        customer.test("Lee");
     }
 
 }

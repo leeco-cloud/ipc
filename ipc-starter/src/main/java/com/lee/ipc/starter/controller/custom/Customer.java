@@ -13,8 +13,8 @@ public class Customer {
     @IpcConsumer
     private IpcServiceTest ipcServiceTest;
 
-    public void test(){
-        ipcServiceTest.test();
+    public String test(String name){
+        return ipcServiceTest.test(name);
     }
 
 }

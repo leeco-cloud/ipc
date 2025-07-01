@@ -27,7 +27,7 @@ public class IpcConsumeReadyListener implements ApplicationListener<IpcConsumeRe
                 IpcClient ipcClient = new IpcClient();
                 ipcClient.init();
                 if (!RegistryLocalCenter.running.get()){
-                    new RegistryLocalCenter(environment);
+                    RegistryLocalCenter.INSTANCE.init(environment);
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);

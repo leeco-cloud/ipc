@@ -13,14 +13,27 @@ public class MessageEncoder extends MessageToByteEncoder<IpcMessage> {
 
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, IpcMessage msg, ByteBuf out) throws Exception {
-        // todo 这里之后移到主线程里
-
         System.out.println("🔒 Encoding message: " + msg);
 
         out.writeInt(0); // 预留长度位置
         out.writeLong(msg.getRequestId());
         out.writeInt(msg.getSerializerType());
         out.writeInt(msg.getMessageType());
+
+        // 请求
+        if (msg.getIpcRequestTime().equals(0L)){
+            out.writeLong(System.nanoTime());
+            out.writeLong(0L);
+        }else{
+            // 响应
+            out.writeLong(msg.getIpcRequestTime());
+            out.writeLong(System.nanoTime());
+        }
+
+        out.writeLong(msg.getRequestDeserializeTime());
+        out.writeLong(msg.getResponseSerializeTime());
+
+        out.writeLong(msg.getBizTime());
 
         byte[] payload = msg.getContent();
         out.writeInt(payload.length);

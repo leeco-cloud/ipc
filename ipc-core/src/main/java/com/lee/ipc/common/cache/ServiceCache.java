@@ -9,4 +9,6 @@ public class ServiceCache {
 
     public static Map<String, ServiceBean> serviceCacheMap = new ConcurrentHashMap<>();
 
+    public static Map<String, Object> serviceBeanCacheMap = new ConcurrentHashMap<>();
+
 }

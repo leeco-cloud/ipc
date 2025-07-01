@@ -3,6 +3,8 @@ package com.lee.ipc.common.register;
 import com.alibaba.fastjson.JSON;
 import com.lee.ipc.common.AutoConfiguration;
 import com.lee.ipc.common.communication.server.ServiceBean;
+import com.lee.ipc.common.exception.ErrorCode;
+import com.lee.ipc.common.log.RuntimeLogger;
 import com.lee.ipc.common.util.FileUtils;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
@@ -22,6 +24,8 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class RegistryLocalCenter {
 
+    public static RegistryLocalCenter INSTANCE = new RegistryLocalCenter();
+
     public static AtomicBoolean running = new AtomicBoolean(false);
 
     private static final ReentrantLock updateLock = new ReentrantLock();
@@ -33,10 +37,8 @@ public class RegistryLocalCenter {
 
     private static final Map<String, List<ServiceBean>> serviceMap = new ConcurrentHashMap<>();
 
-    public RegistryLocalCenter(Environment environment) throws Exception {
+    public void init(Environment environment) throws Exception {
         registerPath = AutoConfiguration.getLocalRegisterCenterPath(environment) + "/" + AutoConfiguration.getContainerName(environment);
-
-        System.out.println("注册中心地址 : " + registerPath);
 
         FileUtils.deleteDirectoryRecursively(registerPath);
         FileUtils.createDirectories(registerPath);
@@ -50,7 +52,7 @@ public class RegistryLocalCenter {
         startWatching();
     }
 
-    private void fullScanDirectory() {
+    public void fullScanDirectory() {
         updateLock.lock();
         try{
             List<String> serviceFilePaths = FileUtils.listAllFilesRecursively(registerPath);
@@ -64,7 +66,7 @@ public class RegistryLocalCenter {
                 }
             }
         } catch (IOException e) {
-            System.err.println("Error scanning directory: " + e.getMessage());
+            RuntimeLogger.error(ErrorCode.REGISTER_REFRESH_CENTER_ERROR);
         } finally {
             updateLock.unlock();
         }

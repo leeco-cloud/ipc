@@ -55,7 +55,7 @@ public class ReferenceBean implements InvocationHandler{
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        IpcMessageResponse ipcMessageResponse = IpcClient.ipcClientInvoke.sendRequest(SerializerType.FURY, MessageType.NORMAL, method.getName(), args);
+        IpcMessageResponse ipcMessageResponse = IpcClient.ipcClientInvoke.sendRequest(serviceUniqueKey, serviceInterface, serializerType, MessageType.NORMAL, method.getName(), args, timeout);
         return ipcMessageResponse.getData();
     }
 

@@ -1,15 +1,23 @@
 package com.lee.ipc.common.communication.server;
 
-import com.alibaba.fastjson.JSON;
+import com.lee.ipc.common.cache.ServiceCache;
 import com.lee.ipc.common.communication.IpcConfig;
+import com.lee.ipc.common.communication.support.ThreadLocalContent;
+import com.lee.ipc.common.exception.ErrorCode;
+import com.lee.ipc.common.log.RuntimeLogger;
 import com.lee.ipc.common.protocol.IpcMessage;
 import com.lee.ipc.common.protocol.IpcMessageRequest;
 import com.lee.ipc.common.protocol.IpcMessageResponse;
 import com.lee.ipc.common.serialization.common.SerializerType;
+import com.lee.ipc.common.spi.SpiLoader;
+import com.lee.ipc.common.spi.invoke.IpcInvokeSpi;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.springframework.util.CollectionUtils;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -30,54 +38,93 @@ public class ServerHandler extends SimpleChannelInboundHandler<IpcMessage> {
         // 异步处理业务逻辑（不阻塞IO线程）
         businessThreadPool.execute(() -> {
             IpcMessage result;
-            try {
-                result = invokeService(msg);
-                IpcMessage finalResult = result;
-                ctx.executor().execute(() -> ctx.writeAndFlush(finalResult));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            result = invokeService(msg);
+            IpcMessage finalResult = result;
+            ctx.executor().execute(() -> ctx.writeAndFlush(finalResult));
         });
     }
 
     /**
      * 执行服务链路
      */
-    private IpcMessage invokeService(IpcMessage msg) throws Exception {
-        System.out.println("receive request msg: " + JSON.toJSONString(msg));
+    private IpcMessage invokeService(IpcMessage msg) {
+        try{
+            SerializerType serializerType = SerializerType.getSerializerType(msg.getSerializerType());
 
-        SerializerType serializerType = SerializerType.getSerializerType(msg.getSerializerType());
+            // 处理请求并生成响应
+            IpcMessageRequest request = null;
+            try{
+                request = msg.deserializeRequest(serializerType);
+            }catch (Exception e){
+                RuntimeLogger.error(ErrorCode.REQUEST_DESERIALIZE_ERROR);
+            }
 
-        // 处理请求并生成响应
-        IpcMessageRequest request = msg.deserializeRequest(serializerType);
+            // 拦截器链SPI 前置处理器
+            List<IpcInvokeSpi> ipcInvokeSpi = SpiLoader.loadIpcInvokeSpi();
 
-        Object response = doInvokeService(request.getMethodName(), request.getArgs());
+            Object[] args = request.getArgs();
+            for (IpcInvokeSpi invokeSpi : ipcInvokeSpi) {
+                args = invokeSpi.beforeInvoke(request.getInterfaceClass(), request.getMethodName(), args);
+            }
 
-        IpcMessage respMsg = new IpcMessage(msg.getRequestId(), msg.getSerializerType(), msg.getMessageType());
-        IpcMessageResponse ipcMessageResponse = new IpcMessageResponse(response);
+            Map<String, Object> userData = request.getUserData();
+            // 用户自定义数据
+            if (!CollectionUtils.isEmpty(userData)) {
+                ThreadLocalContent.putAllUserData(userData);
+            }
 
-        respMsg.serialize(serializerType, ipcMessageResponse);
+            long startTime = System.nanoTime();
+            Object response = doInvokeService(request.getServiceUniqueKey(), request.getMethodName(), request.getArgs());
+            long bizSpendTime = System.nanoTime() - startTime;
 
-        System.out.println("send response msg: " + JSON.toJSONString(respMsg));
+            // 拦截器链SPI 后置处理器
+            for (IpcInvokeSpi invokeSpi : ipcInvokeSpi) {
+                response = invokeSpi.afterInvoke(request.getInterfaceClass(), request.getMethodName(), response);
+            }
 
-        return respMsg;
+            IpcMessage respMsg = new IpcMessage(msg.getRequestId(), msg.getSerializerType(), msg.getMessageType());
+            respMsg.setIpcRequestTime(msg.getIpcRequestTime());
+            respMsg.setIpcResponseTime(msg.getIpcResponseTime());
+            respMsg.setRequestDeserializeTime(msg.getRequestDeserializeTime());
+
+            respMsg.setBizTime(bizSpendTime);
+
+            IpcMessageResponse ipcMessageResponse = new IpcMessageResponse(response);
+
+            respMsg.serializeResponse(serializerType, ipcMessageResponse);
+
+            return respMsg;
+        } catch (Exception e) {
+
+
+        } finally {
+            ThreadLocalContent.clear();
+        }
+        return null;
     }
 
     /**
      * 执行业务逻辑
      */
-    private Object doInvokeService(String methodName, Object[] args) throws Exception {
-        // todo 实际业务处理逻辑
-        Map<String,String> data = new HashMap<>();
-        data.put("nihao " , "yanhuai lee");
-        return data;
-    }
+    private Object doInvokeService(String serviceUniqueKey, String methodName, Object[] args) throws Exception {
+        // 实际业务处理逻辑
+        Object service = ServiceCache.serviceBeanCacheMap.get(serviceUniqueKey);
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        System.err.println("Business handler error: " + cause.getMessage());
-        cause.printStackTrace();
-        ctx.close();
+        // 解析参数类型
+        if (args == null || args.length == 0) {
+            // 获取方法并调用
+            Method method = service.getClass().getMethod(methodName);
+            return method.invoke(service);
+        }else{
+            Class<?>[] argTypes = new Class[args.length];
+            for (int i = 0; i < args.length; i++) {
+                argTypes[i] = args[i].getClass();
+            }
+            // 获取方法并调用
+            Method method = service.getClass().getMethod(methodName, argTypes);
+            return method.invoke(service, args);
+        }
+
     }
 
 }

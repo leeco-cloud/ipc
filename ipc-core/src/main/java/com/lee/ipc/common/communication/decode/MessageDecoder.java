@@ -28,6 +28,24 @@ public class MessageDecoder extends ByteToMessageDecoder {
         }
 
         IpcMessage message = new IpcMessage(in.readLong(), in.readInt(), in.readInt());
+
+        long ipcRequestTime = in.readLong();
+        long ipcResponseTime = in.readLong();
+
+        // 请求
+        if (ipcResponseTime == 0L){
+            message.setIpcRequestTime(System.nanoTime() - ipcRequestTime);
+        }else{
+            // 响应
+            message.setIpcRequestTime(ipcRequestTime);
+            message.setIpcResponseTime(System.nanoTime() - ipcResponseTime);
+        }
+
+        message.setRequestDeserializeTime(in.readLong());
+        message.setResponseSerializeTime(in.readLong());
+
+        message.setBizTime(in.readLong());
+
         int contentLength = in.readInt();
         byte[] content = new byte[contentLength];
         in.readBytes(content);

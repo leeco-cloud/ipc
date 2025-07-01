@@ -6,7 +6,7 @@ import com.lee.ipc.common.annotation.IpcProvider;
 public class IpcServiceTestImpl implements IpcServiceTest{
 
     @Override
-    public void test() {
-        System.out.println("test");
+    public String test(String name) {
+        return name;
     }
 }

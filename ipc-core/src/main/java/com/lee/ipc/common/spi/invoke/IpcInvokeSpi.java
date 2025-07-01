@@ -6,8 +6,8 @@ package com.lee.ipc.common.spi.invoke;
  */
 public interface IpcInvokeSpi {
 
-    Object[] beforeInvoke(Object... request);
+    Object[] beforeInvoke(Class<?> serviceInterface, String methodName, Object[] args);
 
-    Object afterInvoke(Object response);
+    Object afterInvoke(Class<?> serviceInterface, String methodName, Object args);
 
 }

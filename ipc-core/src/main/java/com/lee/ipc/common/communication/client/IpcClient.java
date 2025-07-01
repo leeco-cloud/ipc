@@ -66,7 +66,6 @@ public class IpcClient extends IpcConfig {
             connectServer(bootstrap, socketAddress);
 
             System.out.println("✅ Connection established");
-
         } catch (Exception e) {
             e.printStackTrace();
         }

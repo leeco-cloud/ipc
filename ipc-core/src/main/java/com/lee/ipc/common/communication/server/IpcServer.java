@@ -52,7 +52,6 @@ public class IpcServer extends IpcConfig {
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT) // 内存池
                 .childOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator())
 
-                .handler(new LoggingHandler(LogLevel.INFO))
                 .childHandler(new ChannelInitializer<>() {
                     @Override
                     protected void initChannel(Channel ch) {
