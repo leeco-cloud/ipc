@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  * @author yanhuai lee
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE,ElementType.METHOD})
+@Target({ElementType.TYPE})
 @Component
 public @interface IpcProvider {
 
