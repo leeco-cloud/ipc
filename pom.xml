@@ -10,7 +10,7 @@
 
     <modules>
         <module>ipc-core</module>
-        <module>ipc-starter</module>
+        <module>ipc-example</module>
     </modules>
 
     <properties>
