@@ -1,5 +1,6 @@
 package com.lee.ipc.starter.controller;
 
+import com.lee.ipc.common.communication.server.IpcServer;
 import com.lee.ipc.starter.controller.custom.Customer;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +18,7 @@ public class BasicController {
     @RequestMapping("/hello")
     @ResponseBody
     public void hello() {
-        customer.test("Lee");
+        customer.test();
     }
 
 }

@@ -59,7 +59,7 @@ public class MonitorSupport {
                 }
             });
         }catch (Exception e){
-            RuntimeLogger.error(e.getMessage());
+            RuntimeLogger.error(e.getMessage(), e);
         }
     }
 

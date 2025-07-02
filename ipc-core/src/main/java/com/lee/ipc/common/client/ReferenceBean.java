@@ -16,6 +16,8 @@ import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.List;
 
 @Getter
@@ -72,7 +74,9 @@ public class ReferenceBean implements InvocationHandler{
             throw new IpcRuntimeException(ErrorCode.CLIENT_UN_READY, serviceInterface);
         }
 
-        IpcMessageResponse ipcMessageResponse = ipcClient.ipcClientInvoke.sendRequest(serviceUniqueKey, serviceInterface, serializerType, MessageType.NORMAL, method.getName(), args, timeout);
+        Type[] genericTypes = method.getParameterTypes();
+
+        IpcMessageResponse ipcMessageResponse = ipcClient.ipcClientInvoke.sendRequest(serviceUniqueKey, serviceInterface, serializerType, MessageType.NORMAL, method.getName(), List.of(genericTypes), args, timeout);
         return ipcMessageResponse.getData();
     }
 

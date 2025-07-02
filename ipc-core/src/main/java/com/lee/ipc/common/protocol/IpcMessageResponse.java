@@ -22,4 +22,13 @@ public class IpcMessageResponse implements Serializable {
     private Integer errorCode;
     private String errorMsg;
 
+    public Integer getErrorCode() {
+        if (errorCode == null || errorCode == 0) {
+            return null;
+        }
+        return errorCode;
+    }
+
+    //    private Map<String, Long> monitorData = new ConcurrentHashMap<>();
+
 }

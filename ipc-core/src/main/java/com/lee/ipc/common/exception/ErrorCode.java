@@ -23,7 +23,7 @@ public enum ErrorCode {
 
     // 服务端错误 4000-4999
     REQUEST_DESERIALIZE_ERROR(4001, "客户端反序列化失败"),
-    RESPONSE_SERIALIZER_ERROR(4002, "客户端反序列化失败"),
+    RESPONSE_SERIALIZER_ERROR(4002, "服务端序列化失败"),
     SERVICE_INVOKE_ERROR(4003, "服务端执行异常"),
 
     // 注册中心错误 5000-5999

@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
+ * 序列化工厂
  * @author yanhuai lee
  */
 public class SerializationFactory {

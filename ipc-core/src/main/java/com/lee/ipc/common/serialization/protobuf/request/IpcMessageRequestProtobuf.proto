@@ -1,0 +1,13 @@
+syntax = "proto3";
+option java_multiple_files = true;
+option java_package = "com.lee.ipc.common.serialization.protobuf.request";
+option java_outer_classname = "IpcMessageRequestProtobuf";
+
+message IpcMessageRequestProto {
+  string service_unique_key = 1;
+  string interface_class = 2;
+  string method_name = 3;
+  repeated bytes parameter_types = 4;
+  repeated bytes args = 5;
+  map<string, bytes> user_data = 6;
+}

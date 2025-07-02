@@ -1,0 +1,10 @@
+syntax = "proto3";
+option java_multiple_files = true;
+option java_package = "com.lee.ipc.common.serialization.protobuf.response";
+option java_outer_classname = "IpcMessageResponseProtobuf";
+
+message IpcMessageResponseProto {
+  bytes data = 1;
+  int32 error_code = 2;
+  string error_msg = 3;
+}

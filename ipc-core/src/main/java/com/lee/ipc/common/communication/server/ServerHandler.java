@@ -16,6 +16,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -61,7 +63,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<IpcMessage> {
                 respMsg.setRequestDeserializeTime(msg.getRequestDeserializeTime());
             }catch (Exception e){
                 // 请求反序列化错误
-                RuntimeLogger.error(ErrorCode.REQUEST_DESERIALIZE_ERROR);
+                RuntimeLogger.error(ErrorCode.REQUEST_DESERIALIZE_ERROR.getMessage(), e);
                 IpcMessageResponse ipcMessageResponse = new IpcMessageResponse();
                 ipcMessageResponse.setErrorCode(ErrorCode.REQUEST_DESERIALIZE_ERROR.getCode());
                 ipcMessageResponse.setErrorMsg(e.getMessage());
@@ -84,7 +86,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<IpcMessage> {
             }
 
             long startTime = System.nanoTime();
-            Object response = doInvokeService(request.getServiceUniqueKey(), request.getMethodName(), request.getArgs());
+            Object response = doInvokeService(request.getServiceUniqueKey(), request.getMethodName(), request.getParameterTypes(), request.getArgs());
             long bizSpendTime = System.nanoTime() - startTime;
 
             // 拦截器链SPI 后置处理器
@@ -100,7 +102,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<IpcMessage> {
             try{
                 respMsg.serializeResponse(serializerType, ipcMessageResponse);
             }catch (Exception e){
-                RuntimeLogger.error(ErrorCode.RESPONSE_SERIALIZER_ERROR);
+                RuntimeLogger.error(ErrorCode.RESPONSE_SERIALIZER_ERROR.getMessage(), e);
                 ipcMessageResponse = new IpcMessageResponse();
                 ipcMessageResponse.setErrorCode(ErrorCode.RESPONSE_SERIALIZER_ERROR.getCode());
                 ipcMessageResponse.setErrorMsg(e.getMessage());
@@ -111,7 +113,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<IpcMessage> {
 
             return respMsg;
         } catch (Exception e) {
-            RuntimeLogger.error(ErrorCode.SERVICE_INVOKE_ERROR);
+            RuntimeLogger.error(ErrorCode.SERVICE_INVOKE_ERROR.getMessage(), e);
             IpcMessageResponse ipcMessageResponse = new IpcMessageResponse();
             ipcMessageResponse.setErrorCode(ErrorCode.SERVICE_INVOKE_ERROR.getCode());
             ipcMessageResponse.setErrorMsg(e.getMessage());
@@ -131,7 +133,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<IpcMessage> {
     /**
      * 执行业务逻辑
      */
-    private Object doInvokeService(String serviceUniqueKey, String methodName, Object[] args) throws Exception {
+    private Object doInvokeService(String serviceUniqueKey, String methodName, List<Type> typeList, Object[] args) throws Exception {
         // 实际业务处理逻辑
         Object service = ServiceCache.serviceBeanCacheMap.get(serviceUniqueKey);
 
@@ -141,15 +143,27 @@ public class ServerHandler extends SimpleChannelInboundHandler<IpcMessage> {
             Method method = service.getClass().getMethod(methodName);
             return method.invoke(service);
         }else{
-            Class<?>[] argTypes = new Class[args.length];
-            for (int i = 0; i < args.length; i++) {
-                argTypes[i] = args[i].getClass();
-            }
+//            Class<?>[] argTypes = new Class[args.length];
+//            for (int i = 0; i < args.length; i++) {
+//                argTypes[i] = args[i].getClass();
+//            }
             // 获取方法并调用
-            Method method = service.getClass().getMethod(methodName, argTypes);
+            Method method = service.getClass().getMethod(methodName, getRawTypes(typeList));
             return method.invoke(service, args);
         }
 
+    }
+
+    // 提取原始类型用于方法查找
+    private Class<?>[] getRawTypes(List<Type> types) {
+        return types.stream()
+                .map(type -> {
+                    if (type instanceof Class) return (Class<?>) type;
+                    if (type instanceof ParameterizedType)
+                        return (Class<?>) ((ParameterizedType) type).getRawType();
+                    return Object.class; // 兜底处理
+                })
+                .toArray(Class<?>[]::new);
     }
 
 }

@@ -17,6 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.springframework.util.CollectionUtils;
 
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -37,7 +38,7 @@ public class IpcClientInvoke {
     private static final AtomicLong idGenerator = new AtomicLong(1);
 
     public IpcMessageResponse sendRequest(String serviceUniqueKey, Class<?> serviceInterface, SerializerType serializerType,
-                                          MessageType messageType, String methodName, Object[] args, Integer timeout) {
+                                          MessageType messageType, String methodName, List<Type> typeList, Object[] args, Integer timeout) {
         // 生成唯一请求ID
         Long requestId = idGenerator.getAndIncrement();
         try{
@@ -49,7 +50,7 @@ public class IpcClientInvoke {
                 args = invokeSpi.beforeInvoke(serviceInterface, methodName, args);
             }
 
-            IpcMessageRequest ipcMessageRequest = new IpcMessageRequest(serviceUniqueKey, serviceInterface, methodName, args);
+            IpcMessageRequest ipcMessageRequest = new IpcMessageRequest(serviceUniqueKey, serviceInterface, methodName, typeList, args);
 
             // 用户自定义数据
             Map<String, Object> allUserData = ThreadLocalContent.getAllUserData();
@@ -106,7 +107,7 @@ public class IpcClientInvoke {
                 return ipcMessageResponse;
             }catch (Exception e){
                 // 响应反序列化失败
-                throw new IpcRuntimeException(ErrorCode.REQUEST_SERIALIZER_ERROR, ipcMessageRequest.getInterfaceClass().getName(), ipcMessageRequest.getMethodName());
+                throw new IpcRuntimeException(ErrorCode.RESPONSE_DESERIALIZE_ERROR, ipcMessageRequest.getInterfaceClass().getName(), ipcMessageRequest.getMethodName());
             }
         }catch (TimeoutException timeoutException){
             // 请求超时

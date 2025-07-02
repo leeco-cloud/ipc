@@ -1,7 +1,12 @@
 package com.lee.ipc.starter.controller.provider;
 
+import com.lee.ipc.starter.controller.model.CustomerProtocolInterface;
+import com.lee.ipc.starter.controller.model.ProviderProtocolInterface;
+
+import java.util.Map;
+
 public interface IpcServiceTest {
 
-    String test(String name);
+    ProviderProtocolInterface test(String name, Map<String, Object> param, CustomerProtocolInterface client);
 
 }

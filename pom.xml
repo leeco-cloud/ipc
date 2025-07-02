@@ -28,7 +28,6 @@
                 <artifactId>ipc-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
@@ -43,7 +42,7 @@
             <dependency>
                 <groupId>com.google.protobuf</groupId>
                 <artifactId>protobuf-java</artifactId>
-                <version>4.28.2</version>
+                <version>3.25.1</version>
             </dependency>
             <!-- netty -->
             <dependency>
