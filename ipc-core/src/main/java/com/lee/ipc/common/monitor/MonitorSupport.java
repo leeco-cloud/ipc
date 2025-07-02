@@ -49,7 +49,11 @@ public class MonitorSupport {
                 if (monitorData != null){
                     List<IpcMonitorSpi> ipcMonitorSpi = SpiLoader.loadIpcMonitorSpi();
                     for (IpcMonitorSpi monitorSpi : ipcMonitorSpi) {
-                        monitorSpi.recordMetrics(requestId, monitorData);
+                        try{
+                            monitorSpi.recordMetrics(requestId, monitorData);
+                        }catch (Exception e){
+                            // ignore
+                        }
                     }
                     MonitorSupport.allMonitorTime.remove(requestId);
                 }
