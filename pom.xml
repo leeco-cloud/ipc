@@ -78,6 +78,11 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.1</version>
+            </plugin>
             <!-- 编译器插件 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
