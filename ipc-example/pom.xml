@@ -6,23 +6,18 @@
     <parent>
         <groupId>com.dreams-summer</groupId>
         <artifactId>ipc</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </parent>
 
     <artifactId>ipc-example</artifactId>
-
-    <properties>
-        <java.version>11</java.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <spring-boot.version>2.7.18</spring-boot.version>
-    </properties>
+    <name>ipc-example</name>
+    <description>ipc-example</description>
+    <url>https://github.com/leeco-cloud/ipc.git</url>
 
     <dependencies>
         <dependency>
             <groupId>com.dreams-summer</groupId>
             <artifactId>ipc-core</artifactId>
-            <version>1.0.0</version>
         </dependency>
 
         <dependency>
@@ -41,48 +36,5 @@
             <version>2.7.18</version>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <!-- Spring Boot Maven插件 -->
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring-boot.version}</version>
-                <configuration>
-                    <mainClass>com.lee.ipc.starter.StarterApplication</mainClass>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.3.1</version>
-            </plugin>
-            <!-- 编译器插件 -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                    <encoding>UTF-8</encoding>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.1.2</version>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>
