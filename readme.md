@@ -114,7 +114,15 @@ public interface IpcMonitorSpi {
 }
 ```
 
+#### 2.4.5 手动服务上报
+```java
+ServerApi.registerServer(Class<?> serviceInterface, Object instance, String version, SerializerType serializerType);
+```
 
+#### 2.4.5 手动服务调用
+```java
+ClientApi.invoke(Class<?> serviceInterface, Method method, Object[] args, String version, SerializerType serializerType, Integer timeout);
+```
 
 ## 3. todo
 
