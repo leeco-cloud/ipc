@@ -19,6 +19,8 @@ import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * 服务提供者进行BPP扫描和注册
  * @author yanhuai lee
@@ -32,9 +34,10 @@ public class ProviderAnnotationBeanPostProcessor implements BeanPostProcessor, B
 
     public static ApplicationEventPublisher applicationEventPublisher;
 
+    public static AtomicBoolean canRegister = new AtomicBoolean(false);
+
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-
         IpcProvider annotation = bean.getClass().getAnnotation(IpcProvider.class);
         if (annotation != null) {
             String version = annotation.version();
@@ -48,24 +51,26 @@ public class ProviderAnnotationBeanPostProcessor implements BeanPostProcessor, B
                 serviceInterface = interfaces[0];
             }
             SerializerType serializerType = annotation.serializerType();
+            registerServer(version, tags, serviceInterface, serializerType, beanName, bean);
+        }
+        return BeanPostProcessor.super.postProcessBeforeInitialization(bean, beanName);
+    }
 
-            String serviceUniqueKey = IpcServerNameGenerationsUtils.generalServiceUniqueKey(version, tags, serviceInterface, serializerType, environment);
+    public static void registerServer(String version, String[] tags, Class<?> serviceInterface, SerializerType serializerType, String beanName, Object bean) {
+        String serviceUniqueKey = IpcServerNameGenerationsUtils.generalServiceUniqueKey(version, tags, serviceInterface, serializerType, environment);
 
-            ServiceBean existServiceBean = ServiceCache.serviceCacheMap.get(serviceUniqueKey);
-            if (existServiceBean != null){
-                throw new IpcBootException(ErrorCode.BOOT_TOO_MUCH_SERVICE_PROVIDER, serviceInterface.getName());
-            }
-
-            String containerName = AutoConfiguration.getContainerName(environment);
-            ServiceBean serviceBean = new ServiceBean(version, tags, serviceInterface, serializerType, beanName, serviceUniqueKey, containerName);
-
-            ServiceCache.serviceCacheMap.put(serviceUniqueKey, serviceBean);
-            ServiceCache.serviceBeanCacheMap.put(serviceUniqueKey, bean);
-
-            applicationEventPublisher.publishEvent(new ServiceBeanExportEvent(serviceBean, environment));
+        ServiceBean existServiceBean = ServiceCache.serviceCacheMap.get(serviceUniqueKey);
+        if (existServiceBean != null){
+            throw new IpcBootException(ErrorCode.BOOT_TOO_MUCH_SERVICE_PROVIDER, serviceInterface.getName());
         }
 
-        return BeanPostProcessor.super.postProcessBeforeInitialization(bean, beanName);
+        String containerName = AutoConfiguration.getContainerName(environment);
+        ServiceBean serviceBean = new ServiceBean(version, tags, serviceInterface, serializerType, beanName, serviceUniqueKey, containerName);
+
+        ServiceCache.serviceCacheMap.put(serviceUniqueKey, serviceBean);
+        ServiceCache.serviceBeanCacheMap.put(serviceUniqueKey, bean);
+
+        applicationEventPublisher.publishEvent(new ServiceBeanExportEvent(serviceBean, environment));
     }
 
     @Override
@@ -79,15 +84,6 @@ public class ProviderAnnotationBeanPostProcessor implements BeanPostProcessor, B
         ProviderAnnotationBeanPostProcessor.registry = registry;
     }
 
-//    public static void registerDependentBean(Object bean) {
-//        BeanDefinition beanDefinition = BeanDefinitionBuilder
-//                .genericBeanDefinition(clazz)
-//                .addConstructorArgReference("customService") // 引用其他 Bean
-//                .getBeanDefinition();
-//
-//        registry.registerBeanDefinition("dependentService", beanDefinition);
-//    }
-
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory configurableListableBeanFactory) throws BeansException {
         // ignore
@@ -96,10 +92,12 @@ public class ProviderAnnotationBeanPostProcessor implements BeanPostProcessor, B
     @Override
     public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
         ProviderAnnotationBeanPostProcessor.applicationEventPublisher = applicationEventPublisher;
+        canRegister.set(true);
     }
 
     @Override
     public void setEnvironment(Environment environment) {
         ProviderAnnotationBeanPostProcessor.environment = environment;
     }
+
 }

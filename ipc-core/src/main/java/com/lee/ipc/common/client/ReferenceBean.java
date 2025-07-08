@@ -62,8 +62,11 @@ public class ReferenceBean implements InvocationHandler{
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
+        return doInvoke(proxy, method, args, serviceInterface, serializerType, serviceUniqueKey, timeout);
+    }
 
-        List<ServiceBean> serviceBeans = RegistryLocalCenter.serviceUniqueKeyServiceMap.get(getServiceUniqueKey());
+    public static Object doInvoke(Object proxy, Method method, Object[] args, Class<?> serviceInterface, SerializerType serializerType, String serviceUniqueKey, Integer timeout) {
+        List<ServiceBean> serviceBeans = RegistryLocalCenter.serviceUniqueKeyServiceMap.get(serviceUniqueKey);
         if (CollectionUtils.isEmpty(serviceBeans)) {
             throw new IpcRuntimeException(ErrorCode.CLIENT_UN_READY, serviceInterface);
         }

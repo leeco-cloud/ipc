@@ -5,7 +5,7 @@
 
     <groupId>com.dreams-summer</groupId>
     <artifactId>ipc</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>ipc</name>
     <description>ipc</description>
@@ -27,12 +27,12 @@
             <dependency>
                 <groupId>com.dreams-summer</groupId>
                 <artifactId>ipc-core</artifactId>
-                <version>1.0.1</version>
+                <version>1.0.2-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.dreams-summer</groupId>
                 <artifactId>ipc-example</artifactId>
-                <version>1.0.1</version>
+                <version>1.0.2-SNAPSHOT</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
