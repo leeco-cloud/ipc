@@ -62,16 +62,21 @@ public class ReferenceBean implements InvocationHandler{
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
-        return doInvoke(proxy, method, args, serviceInterface, serializerType, serviceUniqueKey, timeout);
+        return doInvoke(method, args, serviceInterface, serializerType, serviceUniqueKey, timeout);
     }
 
-    public static Object doInvoke(Object proxy, Method method, Object[] args, Class<?> serviceInterface, SerializerType serializerType, String serviceUniqueKey, Integer timeout) {
+    public static Object doInvoke(Method method, Object[] args, Class<?> serviceInterface, SerializerType serializerType, String serviceUniqueKey, Integer timeout) {
         List<ServiceBean> serviceBeans = RegistryLocalCenter.serviceUniqueKeyServiceMap.get(serviceUniqueKey);
         if (CollectionUtils.isEmpty(serviceBeans)) {
             throw new IpcRuntimeException(ErrorCode.CLIENT_UN_READY, serviceInterface);
         }
         ServiceBean serviceBean = serviceBeans.get(0);
-        IpcClient ipcClient = IpcClient.allClients.get(serviceBean.getContainerName());
+        return doInvokeByContainer(serviceBean.getContainerName(), method, args, serviceInterface, serializerType, serviceUniqueKey, timeout);
+
+    }
+
+    public static Object doInvokeByContainer(String containerName, Method method, Object[] args, Class<?> serviceInterface, SerializerType serializerType, String serviceUniqueKey, Integer timeout) {
+        IpcClient ipcClient = IpcClient.allClients.get(containerName);
         if (ipcClient == null) {
             throw new IpcRuntimeException(ErrorCode.CLIENT_UN_READY, serviceInterface);
         }

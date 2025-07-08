@@ -28,7 +28,12 @@ public class ClientApi {
 
     public static Object invoke(Class<?> serviceInterface, Method method, Object[] args, String version, SerializerType serializerType, Integer timeout) {
         String serviceUniqueKey = IpcServerNameGenerationsUtils.generalServiceUniqueKey(version, null, serviceInterface, serializerType, null);
-        return ReferenceBean.doInvoke(null, method, args, serviceInterface, serializerType, serviceUniqueKey, timeout);
+        return ReferenceBean.doInvoke(method, args, serviceInterface, serializerType, serviceUniqueKey, timeout);
+    }
+
+    public static Object invokeByContainer(String containerName, Class<?> serviceInterface, Method method, Object[] args, String version, SerializerType serializerType, Integer timeout) {
+        String serviceUniqueKey = IpcServerNameGenerationsUtils.generalServiceUniqueKey(version, null, serviceInterface, serializerType, null);
+        return ReferenceBean.doInvokeByContainer(containerName, method, args, serviceInterface, serializerType, serviceUniqueKey, timeout);
     }
 
 }
